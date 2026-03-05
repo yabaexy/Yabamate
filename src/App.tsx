@@ -43,7 +43,7 @@ export default function App() {
       // Check allowance
       const allowance = await wyda.allowance(account, ESCROW_CONTRACT_ADDRESS);
       if (allowance < totalAmount) {
-        console.log('Approving WYDA...');
+        console.log('Approving Yabamate...');
         const approveTx = await wyda.approve(ESCROW_CONTRACT_ADDRESS, totalAmount);
         await approveTx.wait();
         console.log('Approved!');
@@ -111,7 +111,7 @@ export default function App() {
                       transition={{ duration: 0.5 }}
                     >
                       <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                        Powered by BSC & Yaba Mate
+                        Powered by BSC & Yabamate
                       </span>
                       <h1 className="mt-8 text-5xl font-black tracking-tight text-zinc-900 sm:text-7xl">
                         Support Creators with <span className="text-emerald-600">Escrow Confidence</span>
@@ -144,7 +144,7 @@ export default function App() {
                       {
                         icon: Shield,
                         title: "Escrow Protection",
-                        desc: "Your Yaba Mate tokens are held in a smart contract and released to creators monthly."
+                        desc: "Your Yabamate tokens are held in a smart contract and released to creators monthly."
                       },
                       {
                         icon: Zap,
@@ -212,14 +212,20 @@ export default function App() {
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <div className="flex items-center gap-2">
               <img 
-                src="https://storage.googleapis.com/static.run.app/v1/projects/qu5ndcv2kngddfldz2ohx4/images/1741178233379-yabamate.png" 
-                alt="Yaba Mate" 
-                className="h-8 w-auto" 
+                src={`data:image/svg+xml,${encodeURIComponent(`
+                  <svg width="300" height="120" viewBox="0 0 300 120" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100%" height="100%" fill="#18181b" rx="8"/>
+                    <text x="50%" y="45" font-family="cursive, sans-serif" font-size="32" fill="#d8b4fe" text-anchor="middle" style="filter: drop-shadow(0 0 5px #a855f7); font-weight: bold;">YABA</text>
+                    <text x="50%" y="90" font-family="cursive, sans-serif" font-size="32" fill="#d8b4fe" text-anchor="middle" style="filter: drop-shadow(0 0 5px #a855f7); font-weight: bold;">MATE</text>
+                  </svg>
+                `)}`}
+                alt="Yabamate" 
+                className="h-12 w-auto rounded-lg" 
                 referrerPolicy="no-referrer" 
               />
             </div>
             <p className="text-xs text-zinc-400">
-              © 2024 Yaba Mate. Built on Binance Smart Chain.
+              © 2024. Built on Binance Smart Chain.
             </p>
             <div className="flex gap-6 text-xs font-medium text-zinc-500">
               <a href="#" className="hover:text-zinc-900">Terms</a>
