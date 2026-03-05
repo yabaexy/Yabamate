@@ -52,7 +52,7 @@ export const CreatorCard: React.FC<CreatorCardProps> = ({ creator, onClick }) =>
             <span className="text-xs font-medium">1.2k supporters</span>
           </div>
           <div className="flex items-center gap-1 text-sm font-bold text-zinc-900">
-            <span>From {Math.min(...creator.tiers.map(t => t.price))} Yabamate</span>
+            <span>From {Math.min(...creator.tiers.map(t => t.price))} Yaba</span>
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </div>
         </div>

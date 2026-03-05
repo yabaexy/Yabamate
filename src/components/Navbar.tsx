@@ -14,11 +14,12 @@ export const Navbar: React.FC<NavbarProps> = ({ account, onConnect }) => {
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-2">
             <img 
-              src="https://storage.googleapis.com/static.run.app/v1/projects/qu5ndcv2kngddfldz2ohx4/images/70_0.png" 
+              src="https://picsum.photos/seed/yabamate/300/100" 
               alt="Yabamate" 
               className="h-10 w-auto" 
               referrerPolicy="no-referrer" 
             />
+            <span className="text-xl font-bold tracking-tight text-zinc-900">Yabamate</span>
           </div>
           
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-600">

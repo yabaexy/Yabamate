@@ -95,7 +95,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                     <h3 className="font-bold text-zinc-900">{tier.name}</h3>
                     <div className="mt-1 flex items-baseline gap-1">
                       <span className="text-2xl font-black text-zinc-900">{tier.price}</span>
-                      <span className="text-sm font-medium text-zinc-500">Yabamate / mo</span>
+                      <span className="text-sm font-medium text-zinc-500">Yaba / mo</span>
                     </div>
                     <p className="mt-3 text-xs text-zinc-500">{tier.description}</p>
                     <ul className="mt-4 space-y-2">
@@ -143,13 +143,13 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-zinc-600">Total to Escrow</span>
                       <span className="text-lg font-black text-zinc-900">
-                        {selectedTier.price * months} Yabamate
+                        {selectedTier.price * months} Yaba
                       </span>
                     </div>
                     <div className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 p-3 text-[10px] text-emerald-800">
                       <ShieldCheck className="h-4 w-4 shrink-0" />
                       <p>
-                        Your funds are held in a secure escrow contract. {selectedTier.price} Yabamate will be released to the creator every 30 days. You can cancel and refund the remaining balance at any time.
+                        Your funds are held in a secure escrow contract. {selectedTier.price} Yaba will be released to the creator every 30 days. You can cancel and refund the remaining balance at any time.
                       </p>
                     </div>
                   </div>
@@ -159,7 +159,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                     disabled={loading}
                     className="w-full rounded-2xl bg-zinc-900 py-4 text-sm font-bold text-white transition-all hover:bg-zinc-800 active:scale-[0.98] disabled:opacity-50"
                   >
-                    {loading ? "Processing..." : `Confirm Subscription (${selectedTier.price * months} Yabamate)`}
+                    {loading ? "Processing..." : `Confirm Subscription (${selectedTier.price * months} Yaba)`}
                   </button>
                 </motion.div>
               )}
