@@ -13,10 +13,12 @@ export const Navbar: React.FC<NavbarProps> = ({ account, onConnect }) => {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-white font-bold">
-              W
-            </div>
-            <span className="text-xl font-bold tracking-tight text-zinc-900">WYDA Patreon</span>
+            <img 
+              src="https://storage.googleapis.com/static.run.app/v1/projects/qu5ndcv2kngddfldz2ohx4/images/70_0.png" 
+              alt="Yabamate" 
+              className="h-10 w-auto" 
+              referrerPolicy="no-referrer" 
+            />
           </div>
           
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-600">

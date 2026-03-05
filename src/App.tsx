@@ -43,7 +43,7 @@ export default function App() {
       // Check allowance
       const allowance = await wyda.allowance(account, ESCROW_CONTRACT_ADDRESS);
       if (allowance < totalAmount) {
-        console.log('Approving WYDA...');
+        console.log('Approving Yabamate...');
         const approveTx = await wyda.approve(ESCROW_CONTRACT_ADDRESS, totalAmount);
         await approveTx.wait();
         console.log('Approved!');
@@ -110,8 +110,8 @@ export default function App() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5 }}
                     >
-                      <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                        Powered by BSC & WYDA
+                      <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                        Powered by BSC & <img src="https://storage.googleapis.com/static.run.app/v1/projects/qu5ndcv2kngddfldz2ohx4/images/70_0.png" alt="Yabamate" className="h-4 w-auto inline-block" referrerPolicy="no-referrer" />
                       </span>
                       <h1 className="mt-8 text-5xl font-black tracking-tight text-zinc-900 sm:text-7xl">
                         Support Creators with <span className="text-emerald-600">Escrow Confidence</span>
@@ -144,7 +144,7 @@ export default function App() {
                       {
                         icon: Shield,
                         title: "Escrow Protection",
-                        desc: "Your WYDA tokens are held in a smart contract and released to creators monthly."
+                        desc: "Your Yabamate tokens are held in a smart contract and released to creators monthly."
                       },
                       {
                         icon: Zap,
@@ -211,13 +211,15 @@ export default function App() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded bg-emerald-500 text-white text-[10px] font-bold">
-                W
-              </div>
-              <span className="text-sm font-bold tracking-tight text-zinc-900">WYDA Patreon</span>
+              <img 
+                src="https://storage.googleapis.com/static.run.app/v1/projects/qu5ndcv2kngddfldz2ohx4/images/70_0.png" 
+                alt="Yabamate" 
+                className="h-8 w-auto" 
+                referrerPolicy="no-referrer" 
+              />
             </div>
             <p className="text-xs text-zinc-400">
-              © 2024 WYDA Patreon. Built on Binance Smart Chain.
+              © 2024. Built on Binance Smart Chain.
             </p>
             <div className="flex gap-6 text-xs font-medium text-zinc-500">
               <a href="#" className="hover:text-zinc-900">Terms</a>

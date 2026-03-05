@@ -54,8 +54,8 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
         {[
           { label: 'Total Supporters', value: stats.totalSupporters, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Total Earned', value: `${stats.totalEarned} WYDA`, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Available to Withdraw', value: `${stats.availableToWithdraw} WYDA`, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
+          { label: 'Total Earned', value: `${stats.totalEarned} Yabamate`, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Available to Withdraw', value: `${stats.availableToWithdraw} Yabamate`, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
         ].map((stat, i) => (
           <div key={i} className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
             <div className={cn("mb-4 flex h-12 w-12 items-center justify-center rounded-2xl", stat.bg)}>
@@ -103,8 +103,8 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
                   <tr key={i} className="hover:bg-zinc-50/50 transition-colors">
                     <td className="px-6 py-4 font-medium text-zinc-900">0x71C...3A9{i}</td>
                     <td className="px-6 py-4 text-zinc-600">Collector</td>
-                    <td className="px-6 py-4 text-zinc-600">50.00 WYDA</td>
-                    <td className="px-6 py-4 text-zinc-600">300.00 WYDA</td>
+                    <td className="px-6 py-4 text-zinc-600">50.00 Yabamate</td>
+                    <td className="px-6 py-4 text-zinc-600">300.00 Yabamate</td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
                         Active
