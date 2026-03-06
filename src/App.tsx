@@ -43,7 +43,7 @@ export default function App() {
       // Check allowance
       const allowance = await wyda.allowance(account, ESCROW_CONTRACT_ADDRESS);
       if (allowance < totalAmount) {
-        console.log('Approving Yabamate...');
+        console.log('Approving WYDA...');
         const approveTx = await wyda.approve(ESCROW_CONTRACT_ADDRESS, totalAmount);
         await approveTx.wait();
         console.log('Approved!');
@@ -144,7 +144,7 @@ export default function App() {
                       {
                         icon: Shield,
                         title: "Escrow Protection",
-                        desc: "Your Yabamate tokens are held in a smart contract and released to creators monthly."
+                        desc: "Your WYDA tokens are held in a smart contract and released to creators monthly."
                       },
                       {
                         icon: Zap,
