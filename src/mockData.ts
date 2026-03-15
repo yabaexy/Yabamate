@@ -9,11 +9,13 @@ export const MOCK_CREATORS: Creator[] = [
     avatarUrl: 'https://picsum.photos/seed/artist1/200/200',
     coverUrl: 'https://picsum.photos/seed/cover1/1200/400',
     category: 'Art',
+    condition: 'Verified',
     tiers: [
       {
         id: 't1',
         name: 'Supporter',
         price: 10,
+        period: 'Monthly',
         description: 'Basic support for my creative journey.',
         benefits: ['Discord access', 'Early previews'],
       },
@@ -21,6 +23,7 @@ export const MOCK_CREATORS: Creator[] = [
         id: 't2',
         name: 'Collector',
         price: 50,
+        period: 'Monthly',
         description: 'For serious art lovers.',
         benefits: ['Monthly NFT drop', 'High-res downloads', 'Discord access'],
       },
@@ -34,11 +37,13 @@ export const MOCK_CREATORS: Creator[] = [
     avatarUrl: 'https://picsum.photos/seed/educator/200/200',
     coverUrl: 'https://picsum.photos/seed/cover2/1200/400',
     category: 'Education',
+    condition: 'Trending',
     tiers: [
       {
         id: 't3',
         name: 'Student',
         price: 5,
+        period: 'Monthly',
         description: 'Access to basic tutorials.',
         benefits: ['Weekly newsletter', 'Q&A access'],
       },
@@ -46,6 +51,7 @@ export const MOCK_CREATORS: Creator[] = [
         id: 't4',
         name: 'Master',
         price: 25,
+        period: 'Monthly',
         description: 'Advanced DeFi strategies.',
         benefits: ['Private webinars', 'Strategy sheets', 'Weekly newsletter'],
       },

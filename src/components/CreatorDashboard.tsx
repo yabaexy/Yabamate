@@ -11,10 +11,38 @@ interface CreatorDashboardProps {
 export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) => {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({
-    totalSupporters: 12,
-    totalEarned: '1250.00',
-    availableToWithdraw: '450.00',
+    totalSupporters: 0,
+    totalEarned: '0.00',
+    availableToWithdraw: '0.00',
   });
+
+  // Tier creation state
+  const [newTier, setNewTier] = useState({
+    name: '',
+    priceWyda: '',
+    priceUsd: '',
+    period: 'Monthly',
+    description: '',
+  });
+  const WYDA_TO_USD = 1.25;
+
+  const handleWydaChange = (val: string) => {
+    const wyda = parseFloat(val) || 0;
+    setNewTier({
+      ...newTier,
+      priceWyda: val,
+      priceUsd: (wyda * WYDA_TO_USD).toFixed(2),
+    });
+  };
+
+  const handleUsdChange = (val: string) => {
+    const usd = parseFloat(val) || 0;
+    setNewTier({
+      ...newTier,
+      priceUsd: val,
+      priceWyda: (usd / WYDA_TO_USD).toFixed(2),
+    });
+  };
 
   const handleWithdraw = async () => {
     setLoading(true);
@@ -68,6 +96,119 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
       </div>
 
       <div className="mt-8 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
+        <h2 className="text-xl font-bold text-zinc-900">Manage Subscription Tiers</h2>
+        <p className="mt-1 text-sm text-zinc-500">Create and update your subscription plans for supporters.</p>
+        
+        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+          {/* Create Form */}
+          <div className="rounded-2xl border border-zinc-100 bg-zinc-50/50 p-6">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">Create New Tier</h3>
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-zinc-500">Tier Name</label>
+                <input 
+                  type="text" 
+                  value={newTier.name}
+                  onChange={(e) => setNewTier({...newTier, name: e.target.value})}
+                  placeholder="e.g. Gold Member"
+                  className="mt-1 block w-full rounded-xl border-zinc-200 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-zinc-500">Price (WYDA)</label>
+                  <div className="relative mt-1">
+                    <input 
+                      type="number" 
+                      value={newTier.priceWyda}
+                      onChange={(e) => handleWydaChange(e.target.value)}
+                      placeholder="0.00"
+                      className="block w-full rounded-xl border-zinc-200 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-zinc-500">Billing Period</label>
+                  <select 
+                    value={newTier.period}
+                    onChange={(e) => setNewTier({...newTier, period: e.target.value})}
+                    className="mt-1 block w-full rounded-xl border-zinc-200 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                  >
+                    <option value="Monthly">Monthly</option>
+                    <option value="Quarterly">Quarterly</option>
+                    <option value="Yearly">Yearly</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-zinc-500">Price (USD Equivalent)</label>
+                <div className="relative mt-1">
+                  <input 
+                    type="number" 
+                    value={newTier.priceUsd}
+                    onChange={(e) => handleUsdChange(e.target.value)}
+                    placeholder="0.00"
+                    className="block w-full rounded-xl border-zinc-200 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-emerald-50 p-3 flex items-center justify-between">
+                <span className="text-[10px] font-bold text-emerald-700 uppercase">Current Rate</span>
+                <span className="text-xs font-black text-emerald-900">1 WYDA = ${WYDA_TO_USD} USD</span>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-zinc-500">Description</label>
+                <textarea 
+                  value={newTier.description}
+                  onChange={(e) => setNewTier({...newTier, description: e.target.value})}
+                  placeholder="What benefits do supporters get?"
+                  rows={3}
+                  className="mt-1 block w-full rounded-xl border-zinc-200 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                />
+              </div>
+
+              <button className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white hover:bg-zinc-800 transition-all active:scale-95">
+                Create Tier
+              </button>
+            </div>
+          </div>
+
+          {/* Existing Tiers Preview */}
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">Your Active Tiers</h3>
+            <div className="mt-4 space-y-4">
+              {stats.totalSupporters > 0 ? (
+                [
+                  { name: 'Supporter', price: 10, period: 'Monthly', desc: 'Basic support for my creative journey.' },
+                  { name: 'Collector', price: 50, period: 'Monthly', desc: 'For serious art lovers.' },
+                ].map((tier, i) => (
+                  <div key={i} className="flex items-center justify-between rounded-2xl border border-zinc-100 p-4">
+                    <div>
+                      <h4 className="font-bold text-zinc-900">{tier.name}</h4>
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">{tier.period}</p>
+                      <p className="mt-1 text-xs text-zinc-500">{tier.desc}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-black text-zinc-900">{tier.price} WYDA</p>
+                      <p className="text-[10px] text-zinc-400">${(tier.price * WYDA_TO_USD).toFixed(2)} USD</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-zinc-200 p-8 text-center">
+                  <p className="text-sm text-zinc-500">No tiers created yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-zinc-900">Withdraw Earnings</h2>
@@ -99,19 +240,27 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
-                {[1, 2, 3].map((_, i) => (
-                  <tr key={i} className="hover:bg-zinc-50/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-zinc-900">0x71C...3A9{i}</td>
-                    <td className="px-6 py-4 text-zinc-600">Collector</td>
-                    <td className="px-6 py-4 text-zinc-600">50.00 WYDA</td>
-                    <td className="px-6 py-4 text-zinc-600">300.00 WYDA</td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                        Active
-                      </span>
+                {stats.totalSupporters > 0 ? (
+                  [1, 2, 3].map((_, i) => (
+                    <tr key={i} className="hover:bg-zinc-50/50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-zinc-900">0x71C...3A9{i}</td>
+                      <td className="px-6 py-4 text-zinc-600">Collector</td>
+                      <td className="px-6 py-4 text-zinc-600">50.00 WYDA</td>
+                      <td className="px-6 py-4 text-zinc-600">300.00 WYDA</td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                          Active
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
+                      No supporters yet. Share your profile to start earning!
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

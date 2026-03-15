@@ -16,6 +16,25 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [view, setView] = useState<'explore' | 'dashboard'>('explore');
 
+  // Filtering state
+  const [filterCategory, setFilterCategory] = useState<string>('All');
+  const [filterCondition, setFilterCondition] = useState<string>('All');
+  const [filterMinPrice, setFilterMinPrice] = useState<number>(0);
+  const [filterMaxPrice, setFilterMaxPrice] = useState<number>(1000);
+
+  const filteredCreators = MOCK_CREATORS.filter(creator => {
+    const minTierPrice = Math.min(...creator.tiers.map(t => t.price));
+    
+    const matchesCategory = filterCategory === 'All' || creator.category === filterCategory;
+    const matchesCondition = filterCondition === 'All' || creator.condition === filterCondition;
+    const matchesPrice = minTierPrice >= filterMinPrice && minTierPrice <= filterMaxPrice;
+    
+    return matchesCategory && matchesCondition && matchesPrice;
+  });
+
+  const categories = ['All', ...new Set(MOCK_CREATORS.map(c => c.category))];
+  const conditions = ['All', 'New', 'Trending', 'Verified'];
+
   const handleConnect = async () => {
     try {
       const address = await connectWallet();
@@ -179,8 +198,54 @@ export default function App() {
                     </div>
                   </div>
 
+                  {/* Filters */}
+                  <div className="mb-12 grid grid-cols-1 gap-6 rounded-3xl border border-zinc-100 bg-zinc-50/50 p-8 sm:grid-cols-4">
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">Category</label>
+                      <select 
+                        value={filterCategory}
+                        onChange={(e) => setFilterCategory(e.target.value)}
+                        className="mt-2 block w-full rounded-xl border-zinc-200 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                      >
+                        {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">Condition</label>
+                      <select 
+                        value={filterCondition}
+                        onChange={(e) => setFilterCondition(e.target.value)}
+                        className="mt-2 block w-full rounded-xl border-zinc-200 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                      >
+                        {conditions.map(cond => <option key={cond} value={cond}>{cond}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">Price Range (WYDA)</label>
+                      <div className="mt-2 flex items-center gap-4">
+                        <input 
+                          type="number" 
+                          value={filterMinPrice}
+                          onChange={(e) => setFilterMinPrice(Number(e.target.value))}
+                          placeholder="Min"
+                          className="block w-full rounded-xl border-zinc-200 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-zinc-400">to</span>
+                        <input 
+                          type="number" 
+                          value={filterMaxPrice}
+                          onChange={(e) => setFilterMaxPrice(Number(e.target.value))}
+                          placeholder="Max"
+                          className="block w-full rounded-xl border-zinc-200 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                    {MOCK_CREATORS.map((creator) => (
+                    {filteredCreators.map((creator) => (
                       <CreatorCard
                         key={creator.id}
                         creator={creator}

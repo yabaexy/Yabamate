@@ -95,7 +95,9 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                     <h3 className="font-bold text-zinc-900">{tier.name}</h3>
                     <div className="mt-1 flex items-baseline gap-1">
                       <span className="text-2xl font-black text-zinc-900">{tier.price}</span>
-                      <span className="text-sm font-medium text-zinc-500">WYDA / mo</span>
+                      <span className="text-sm font-medium text-zinc-500">
+                        WYDA / {tier.period === 'Monthly' ? 'mo' : tier.period === 'Quarterly' ? 'qtr' : 'yr'}
+                      </span>
                     </div>
                     <p className="mt-3 text-xs text-zinc-500">{tier.description}</p>
                     <ul className="mt-4 space-y-2">

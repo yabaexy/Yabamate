@@ -6,6 +6,7 @@ export interface Creator {
   avatarUrl: string;
   coverUrl: string;
   category: string;
+  condition: 'New' | 'Trending' | 'Verified';
   tiers: Tier[];
 }
 
@@ -13,6 +14,7 @@ export interface Tier {
   id: string;
   name: string;
   price: number; // in WYDA
+  period: 'Monthly' | 'Quarterly' | 'Yearly';
   description: string;
   benefits: string[];
 }

@@ -37,9 +37,14 @@ export const CreatorCard: React.FC<CreatorCardProps> = ({ creator, onClick }) =>
           <h3 className="text-lg font-bold text-zinc-900 group-hover:text-emerald-600 transition-colors">
             {creator.name}
           </h3>
-          <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-            {creator.category}
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+              {creator.category}
+            </span>
+            <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-[10px] font-bold text-zinc-500">
+              {creator.condition}
+            </span>
+          </div>
         </div>
         
         <p className="mt-2 line-clamp-2 text-sm text-zinc-500">
