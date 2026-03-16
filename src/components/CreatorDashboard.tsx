@@ -18,6 +18,10 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
   });
 
   // Tier creation state
+  const [tiers, setTiers] = useState([
+    { name: 'Supporter', price: 10, period: 'Monthly', desc: 'Basic support for my creative journey.' },
+    { name: 'Collector', price: 50, period: 'Monthly', desc: 'For serious art lovers.' },
+  ]);
   const [newTier, setNewTier] = useState({
     name: '',
     priceWyda: '',
@@ -26,6 +30,29 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
     description: '',
   });
   const { price: wydaToUsdc } = useWydaPrice();
+
+  const handleCreateTier = () => {
+    if (!newTier.name || !newTier.priceWyda) {
+      alert('Please fill in at least the name and price.');
+      return;
+    }
+
+    const tier = {
+      name: newTier.name,
+      price: parseFloat(newTier.priceWyda),
+      period: newTier.period,
+      desc: newTier.description || 'No description provided.',
+    };
+
+    setTiers([...tiers, tier]);
+    setNewTier({
+      name: '',
+      priceWyda: '',
+      priceUsdc: '',
+      period: 'Monthly',
+      description: '',
+    });
+  };
 
   const handleWydaChange = (val: string) => {
     const wyda = parseFloat(val) || 0;
@@ -181,7 +208,10 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
                 />
               </div>
 
-              <button className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white hover:bg-zinc-800 transition-all active:scale-95">
+              <button 
+                onClick={handleCreateTier}
+                className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white hover:bg-zinc-800 transition-all active:scale-95"
+              >
                 Create Tier
               </button>
             </div>
@@ -191,11 +221,8 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">Your Active Tiers</h3>
             <div className="mt-4 space-y-4">
-              {stats.totalSupporters > 0 ? (
-                [
-                  { name: 'Supporter', price: 10, period: 'Monthly', desc: 'Basic support for my creative journey.' },
-                  { name: 'Collector', price: 50, period: 'Monthly', desc: 'For serious art lovers.' },
-                ].map((tier, i) => (
+              {tiers.length > 0 ? (
+                tiers.map((tier, i) => (
                   <div key={i} className="flex items-center justify-between rounded-2xl border border-zinc-100 p-4">
                     <div>
                       <h4 className="font-bold text-zinc-900">{tier.name}</h4>
