@@ -20,27 +20,27 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
   const [newTier, setNewTier] = useState({
     name: '',
     priceWyda: '',
-    priceUsd: '',
+    priceUsdc: '',
     period: 'Monthly',
     description: '',
   });
-  const WYDA_TO_USD = 1.25;
+  const WYDA_TO_USDC = 1.25;
 
   const handleWydaChange = (val: string) => {
     const wyda = parseFloat(val) || 0;
     setNewTier({
       ...newTier,
       priceWyda: val,
-      priceUsd: (wyda * WYDA_TO_USD).toFixed(2),
+      priceUsdc: (wyda * WYDA_TO_USDC).toFixed(2),
     });
   };
 
-  const handleUsdChange = (val: string) => {
-    const usd = parseFloat(val) || 0;
+  const handleUsdcChange = (val: string) => {
+    const usdc = parseFloat(val) || 0;
     setNewTier({
       ...newTier,
-      priceUsd: val,
-      priceWyda: (usd / WYDA_TO_USD).toFixed(2),
+      priceUsdc: val,
+      priceWyda: (usdc / WYDA_TO_USDC).toFixed(2),
     });
   };
 
@@ -143,12 +143,12 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
               </div>
 
               <div>
-                <label className="text-xs font-bold text-zinc-500">Price (USD Equivalent)</label>
+                <label className="text-xs font-bold text-zinc-500">Price (USDC Equivalent)</label>
                 <div className="relative mt-1">
                   <input 
                     type="number" 
-                    value={newTier.priceUsd}
-                    onChange={(e) => handleUsdChange(e.target.value)}
+                    value={newTier.priceUsdc}
+                    onChange={(e) => handleUsdcChange(e.target.value)}
                     placeholder="0.00"
                     className="block w-full rounded-xl border-zinc-200 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
                   />
@@ -157,7 +157,7 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
 
               <div className="rounded-xl bg-emerald-50 p-3 flex items-center justify-between">
                 <span className="text-[10px] font-bold text-emerald-700 uppercase">Current Rate</span>
-                <span className="text-xs font-black text-emerald-900">1 WYDA = ${WYDA_TO_USD} USD</span>
+                <span className="text-xs font-black text-emerald-900">1 WYDA = {WYDA_TO_USDC} USDC</span>
               </div>
 
               <div>
@@ -194,7 +194,7 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
                     </div>
                     <div className="text-right">
                       <p className="font-black text-zinc-900">{tier.price} WYDA</p>
-                      <p className="text-[10px] text-zinc-400">${(tier.price * WYDA_TO_USD).toFixed(2)} USD</p>
+                      <p className="text-[10px] text-zinc-400">{(tier.price * WYDA_TO_USDC).toFixed(2)} USDC</p>
                     </div>
                   </div>
                 ))
