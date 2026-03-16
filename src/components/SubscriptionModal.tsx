@@ -3,6 +3,7 @@ import { Creator, Tier } from '../types';
 import { X, Check, ShieldCheck, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { useWydaPrice } from '../hooks/useWydaPrice';
 
 interface SubscriptionModalProps {
   creator: Creator | null;
@@ -20,6 +21,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   const [selectedTier, setSelectedTier] = useState<Tier | null>(null);
   const [months, setMonths] = useState(1);
   const [loading, setLoading] = useState(false);
+  const { price: wydaPrice } = useWydaPrice();
 
   if (!creator) return null;
 
@@ -144,9 +146,14 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                   <div className="rounded-2xl bg-zinc-50 p-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-zinc-600">Total to Escrow</span>
-                      <span className="text-lg font-black text-zinc-900">
-                        {selectedTier.price * months} WYDA
-                      </span>
+                      <div className="text-right">
+                        <p className="text-lg font-black text-zinc-900">
+                          {selectedTier.price * months} WYDA
+                        </p>
+                        <p className="text-xs font-medium text-zinc-400">
+                          ≈ {((selectedTier.price * months) * wydaPrice).toFixed(2)} USDC
+                        </p>
+                      </div>
                     </div>
                     <div className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 p-3 text-[10px] text-emerald-800">
                       <ShieldCheck className="h-4 w-4 shrink-0" />
