@@ -30,6 +30,46 @@ export async function getWeb3Provider() {
 
 export async function connectWallet() {
   const provider = await getWeb3Provider();
+  
+  // Check if we are on BSC (Chain ID 56)
+  const network = await provider.getNetwork();
+  const chainId = network.chainId;
+  
+  if (chainId !== BigInt(56)) {
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x38' }], // 56 in hex
+      });
+    } catch (switchError: any) {
+      // This error code indicates that the chain has not been added to MetaMask.
+      if (switchError.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: '0x38',
+                chainName: 'Binance Smart Chain',
+                nativeCurrency: {
+                  name: 'BNB',
+                  symbol: 'BNB',
+                  decimals: 18,
+                },
+                rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                blockExplorerUrls: ['https://bscscan.com/'],
+              },
+            ],
+          });
+        } catch (addError) {
+          throw new Error('Could not add BSC network to MetaMask');
+        }
+      } else {
+        throw new Error('Please switch to Binance Smart Chain network');
+      }
+    }
+  }
+
   const accounts = await provider.send('eth_requestAccounts', []);
   return accounts[0];
 }
