@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, Download, Users, TrendingUp, Clock } from 'lucide-react';
+import { Wallet, Download, Users, TrendingUp, Clock, LineChart as ChartIcon } from 'lucide-react';
 import { getEscrowContract, getWeb3Provider } from '../lib/web3';
 import { formatAddress, formatWyda } from '../lib/utils';
 import { motion } from 'motion/react';
 import { useWydaPrice } from '../hooks/useWydaPrice';
+import { PriceChart } from './PriceChart';
 
 interface CreatorDashboardProps {
   account: string;
@@ -25,11 +26,9 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
   const [newTier, setNewTier] = useState({
     name: '',
     priceWyda: '',
-    priceUsdc: '',
     period: 'Monthly',
     description: '',
   });
-  const { price: wydaToUsdc } = useWydaPrice();
 
   const handleCreateTier = () => {
     if (!newTier.name || !newTier.priceWyda) {
@@ -48,27 +47,15 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
     setNewTier({
       name: '',
       priceWyda: '',
-      priceUsdc: '',
       period: 'Monthly',
       description: '',
     });
   };
 
   const handleWydaChange = (val: string) => {
-    const wyda = parseFloat(val) || 0;
     setNewTier({
       ...newTier,
       priceWyda: val,
-      priceUsdc: (wyda * wydaToUsdc).toFixed(2),
-    });
-  };
-
-  const handleUsdcChange = (val: string) => {
-    const usdc = parseFloat(val) || 0;
-    setNewTier({
-      ...newTier,
-      priceUsdc: val,
-      priceWyda: (usdc / wydaToUsdc).toFixed(2),
     });
   };
 
@@ -124,6 +111,20 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
       </div>
 
       <div className="mt-8 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-zinc-900">WYDA Performance</h2>
+            <p className="text-sm text-zinc-500">Historical price performance against USDC (24h)</p>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-1.5 text-emerald-700">
+            <ChartIcon className="h-4 w-4" />
+            <span className="text-xs font-bold uppercase tracking-wider">Live Market</span>
+          </div>
+        </div>
+        <PriceChart />
+      </div>
+
+      <div className="mt-8 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
         <h2 className="text-xl font-bold text-zinc-900">Manage Subscription Tiers</h2>
         <p className="mt-1 text-sm text-zinc-500">Create and update your subscription plans for supporters.</p>
         
@@ -171,33 +172,6 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
               </div>
 
               <div>
-                <label className="text-xs font-bold text-zinc-500">Price (USDC Equivalent)</label>
-                <div className="relative mt-1">
-                  <input 
-                    type="number" 
-                    value={newTier.priceUsdc}
-                    onChange={(e) => handleUsdcChange(e.target.value)}
-                    placeholder="0.00"
-                    className="block w-full rounded-xl border-zinc-200 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-emerald-50 p-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-emerald-700 uppercase">Current Rate</span>
-                  <div className="flex items-center gap-1">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span className="text-[8px] font-bold text-emerald-600 uppercase">Live</span>
-                  </div>
-                </div>
-                <span className="text-xs font-black text-emerald-900">1 WYDA = {wydaToUsdc.toFixed(4)} USDC</span>
-              </div>
-
-              <div>
                 <label className="text-xs font-bold text-zinc-500">Description</label>
                 <textarea 
                   value={newTier.description}
@@ -231,7 +205,6 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
                     </div>
                     <div className="text-right">
                       <p className="font-black text-zinc-900">{tier.price} WYDA</p>
-                      <p className="text-[10px] text-zinc-400">{(tier.price * wydaToUsdc).toFixed(2)} USDC</p>
                     </div>
                   </div>
                 ))

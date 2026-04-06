@@ -3,7 +3,6 @@ import { Creator, Tier } from '../types';
 import { X, Check, ShieldCheck, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
-import { useWydaPrice } from '../hooks/useWydaPrice';
 
 interface SubscriptionModalProps {
   creator: Creator | null;
@@ -21,7 +20,6 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   const [selectedTier, setSelectedTier] = useState<Tier | null>(null);
   const [months, setMonths] = useState(1);
   const [loading, setLoading] = useState(false);
-  const { price: wydaPrice } = useWydaPrice();
 
   if (!creator) return null;
 
@@ -149,9 +147,6 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                       <div className="text-right">
                         <p className="text-lg font-black text-zinc-900">
                           {selectedTier.price * months} WYDA
-                        </p>
-                        <p className="text-xs font-medium text-zinc-400">
-                          ≈ {((selectedTier.price * months) * wydaPrice).toFixed(2)} USDC
                         </p>
                       </div>
                     </div>

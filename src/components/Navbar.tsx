@@ -44,11 +44,20 @@ export const Navbar: React.FC<NavbarProps> = ({ account, onConnect }) => {
           </button>
 
           {account ? (
-            <div className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1 pr-3">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100">
-                <User className="h-4 w-4 text-zinc-600" />
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20 uppercase">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+                BSC Network
               </div>
-              <span className="text-xs font-medium text-zinc-700">{formatAddress(account)}</span>
+              <div className="flex items-center gap-3 rounded-full border border-zinc-200 bg-white p-1 pr-3">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100">
+                  <User className="h-4 w-4 text-zinc-600" />
+                </div>
+                <span className="text-xs font-medium text-zinc-700">{formatAddress(account)}</span>
+              </div>
             </div>
           ) : (
             <button
