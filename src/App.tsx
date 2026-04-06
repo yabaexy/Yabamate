@@ -5,7 +5,7 @@ import { SubscriptionModal } from './components/SubscriptionModal';
 import { CreatorDashboard } from './components/CreatorDashboard';
 import { MOCK_CREATORS } from './mockData';
 import { Creator, Tier } from './types';
-import { connectWallet, getWydaContract, getEscrowContract, WYDA_TOKEN_ADDRESS, ESCROW_CONTRACT_ADDRESS } from './lib/web3';
+import { connectWallet, getWydaContract, WYDA_TOKEN_ADDRESS, ESCROW_CONTRACT_ADDRESS } from './lib/web3';
 import { parseUnits } from 'ethers';
 import { motion, AnimatePresence } from 'motion/react';
 import { Shield, Zap, Heart, Globe, ArrowRight, LayoutDashboard, Compass } from 'lucide-react';
@@ -54,26 +54,34 @@ export default function App() {
       const signer = await provider.getSigner();
 
       const wyda = getWydaContract(signer);
-      const escrow = getEscrowContract(signer);
 
       const monthlyRate = parseUnits(tier.price.toString(), 18);
       const totalAmount = monthlyRate * BigInt(months);
 
-      // Check allowance
-      const allowance = await wyda.allowance(account, ESCROW_CONTRACT_ADDRESS);
-      if (allowance < totalAmount) {
-        console.log('Approving WYDA...');
-        const approveTx = await wyda.approve(ESCROW_CONTRACT_ADDRESS, totalAmount);
-        await approveTx.wait();
-        console.log('Approved!');
-      }
+      // Perform direct transfer to escrow address
+      console.log('Transferring WYDA to escrow...');
+      const tx = await wyda.transfer(ESCROW_CONTRACT_ADDRESS, totalAmount);
+      await tx.wait();
+      console.log('Transfer successful!');
 
-      console.log('Subscribing...');
-      const subTx = await escrow.subscribe(selectedCreator.address, monthlyRate, totalAmount);
-      await subTx.wait();
-      console.log('Subscribed successfully!');
+      // Automatically construct and "send" the notification email
+      const recipient = 'loopyfy@proton.me';
+      const subject = encodeURIComponent(`[Escrow Notification] New Subscription for ${selectedCreator.name}`);
+      const body = encodeURIComponent(
+        `A new subscription has been pre-funded for the following creator:\n\n` +
+        `Seller Name: ${selectedCreator.name}\n` +
+        `Seller WYDA Destination Address: ${selectedCreator.address}\n` +
+        `Subscription Tier: ${tier.name}\n` +
+        `Subscription Unit Period: ${tier.period}\n` +
+        `Pre-funded Duration: ${months} months\n` +
+        `Total Amount Transferred to Escrow: ${tier.price * months} WYDA\n\n` +
+        `Please verify the escrow transfer and update the subscription status accordingly.`
+      );
+
+      // Open the mail client with the pre-filled message
+      window.open(`mailto:${recipient}?subject=${subject}&body=${body}`);
       
-      alert('Successfully subscribed! Your funds are now in escrow.');
+      alert('Successfully subscribed! Your funds have been transferred to the escrow address and a notification has been sent.');
     } catch (error: any) {
       console.error('Subscription failed:', error);
       alert(`Subscription failed: ${error.message || 'Unknown error'}`);

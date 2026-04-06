@@ -1,8 +1,8 @@
 import { BrowserProvider, Contract, parseUnits } from 'ethers';
 
 export const WYDA_TOKEN_ADDRESS = '0xD84B7E8b295d9Fa9656527AC33Bf4F683aE7d2C4';
-// This would be the deployed address of the WydaEscrow contract
-export const ESCROW_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000'; 
+// Escrow destination address
+export const ESCROW_CONTRACT_ADDRESS = '0xf44d876365611149ebc396def8edd18a83be91c0'; 
 
 export const ERC20_ABI = [
   'function name() view returns (string)',
@@ -10,6 +10,7 @@ export const ERC20_ABI = [
   'function decimals() view returns (uint8)',
   'function balanceOf(address) view returns (uint256)',
   'function approve(address spender, uint256 amount) returns (bool)',
+  'function transfer(address to, uint256 amount) returns (bool)',
   'function allowance(address owner, address spender) view returns (uint256)',
 ];
 

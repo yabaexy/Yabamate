@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, Download, Users, TrendingUp, Clock, LineChart as ChartIcon } from 'lucide-react';
-import { getEscrowContract, getWeb3Provider } from '../lib/web3';
+import { Wallet, Download, Users, TrendingUp, Clock, LineChart as ChartIcon, ExternalLink, ArrowRightLeft } from 'lucide-react';
+import { getEscrowContract, getWeb3Provider, WYDA_TOKEN_ADDRESS } from '../lib/web3';
 import { formatAddress, formatWyda } from '../lib/utils';
 import { motion } from 'motion/react';
 import { useWydaPrice } from '../hooks/useWydaPrice';
 import { PriceChart } from './PriceChart';
+
+const USDC_TOKEN_ADDRESS = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
+const APESWAP_URL = `https://apeswap.finance/swap?inputCurrency=${WYDA_TOKEN_ADDRESS}&outputCurrency=${USDC_TOKEN_ADDRESS}`;
 
 interface CreatorDashboardProps {
   account: string;
@@ -219,21 +222,33 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
       </div>
 
       <div className="mt-8 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-bold text-zinc-900">Withdraw Earnings</h2>
+            <h2 className="text-xl font-bold text-zinc-900">Withdraw & Swap</h2>
             <p className="mt-1 text-sm text-zinc-500">
-              Funds are released from escrow every 30 days based on your active subscriptions.
+              Funds are released from escrow every 30 days. You can swap your WYDA to USDC via ApeSwap.
             </p>
           </div>
-          <button
-            onClick={handleWithdraw}
-            disabled={loading}
-            className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-8 py-4 text-sm font-bold text-white hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50"
-          >
-            <Download className="h-4 w-4" />
-            {loading ? 'Processing...' : 'Withdraw Available Funds'}
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href={APESWAP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-2xl bg-zinc-100 px-6 py-4 text-sm font-bold text-zinc-900 hover:bg-zinc-200 transition-all active:scale-95"
+            >
+              <ArrowRightLeft className="h-4 w-4" />
+              Swap on ApeSwap
+              <ExternalLink className="h-3 w-3 opacity-50" />
+            </a>
+            <button
+              onClick={handleWithdraw}
+              disabled={loading}
+              className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-8 py-4 text-sm font-bold text-white hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50"
+            >
+              <Download className="h-4 w-4" />
+              {loading ? 'Processing...' : 'Withdraw Available Funds'}
+            </button>
+          </div>
         </div>
 
         <div className="mt-12">
