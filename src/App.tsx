@@ -3,18 +3,54 @@ import { Navbar } from './components/Navbar';
 import { CreatorCard } from './components/CreatorCard';
 import { SubscriptionModal } from './components/SubscriptionModal';
 import { CreatorDashboard } from './components/CreatorDashboard';
+import { Arcade } from './components/Arcade';
 import { MOCK_CREATORS } from './mockData';
 import { Creator, Tier } from './types';
 import { connectWallet, getWydaContract, WYDA_TOKEN_ADDRESS, ESCROW_CONTRACT_ADDRESS } from './lib/web3';
+import { useYMP, YMP_TO_WYDA_RATE } from './hooks/useYMP';
 import { parseUnits } from 'ethers';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shield, Zap, Heart, Globe, ArrowRight, LayoutDashboard, Compass } from 'lucide-react';
+import { Shield, Zap, Heart, Globe, ArrowRight, LayoutDashboard, Compass, Gamepad2, Gift } from 'lucide-react';
 
 export default function App() {
   const [account, setAccount] = useState<string | null>(null);
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [view, setView] = useState<'explore' | 'dashboard'>('explore');
+  const [view, setView] = useState<'explore' | 'dashboard' | 'arcade'>('explore');
+  const [showRewardToast, setShowRewardToast] = useState<{ points: number; message: string } | null>(null);
+
+  const { points, checkAttendance, markGamePlayed, spendPoints } = useYMP(account);
+
+  useEffect(() => {
+    if (account) {
+      checkAttendance().then(pointsEarned => {
+        if (pointsEarned > 0) {
+          setShowRewardToast({ 
+            points: pointsEarned, 
+            message: `Daily Attendance Reward! +${pointsEarned} YMP` 
+          });
+          setTimeout(() => setShowRewardToast(null), 5000);
+        }
+      });
+    }
+  }, [account]);
+
+  const handleGamePlayed = async (game: 'tetris' | 'pong' | 'backgammon') => {
+    if (!account) return;
+    const bonus = await markGamePlayed(game);
+    if (bonus && bonus > 0) {
+      setShowRewardToast({
+        points: bonus,
+        message: `Daily Mission Complete! +${bonus} YMP`
+      });
+      setTimeout(() => setShowRewardToast(null), 5000);
+    }
+  };
+
+  useEffect(() => {
+    // Check for daily task completion bonus
+    // This is a bit tricky with the current hook structure, but we can monitor points
+  }, [points]);
 
   // Filtering state
   const [filterCategory, setFilterCategory] = useState<string>('All');
@@ -45,7 +81,7 @@ export default function App() {
     }
   };
 
-  const handleSubscribe = async (tier: Tier, months: number) => {
+  const handleSubscribe = async (tier: Tier, months: number, useYMPAmount: number) => {
     if (!account || !selectedCreator) return;
 
     try {
@@ -55,14 +91,25 @@ export default function App() {
 
       const wyda = getWydaContract(signer);
 
-      const monthlyRate = parseUnits(tier.price.toString(), 18);
-      const totalAmount = monthlyRate * BigInt(months);
+      const totalWydaRequired = tier.price * months;
+      const wydaDiscount = useYMPAmount / YMP_TO_WYDA_RATE;
+      const finalWydaToPay = Math.max(0, totalWydaRequired - wydaDiscount);
 
-      // Perform direct transfer to escrow address
-      console.log('Transferring WYDA to escrow...');
-      const tx = await wyda.transfer(ESCROW_CONTRACT_ADDRESS, totalAmount);
-      await tx.wait();
-      console.log('Transfer successful!');
+      if (useYMPAmount > 0) {
+        const spent = spendPoints(useYMPAmount);
+        if (!spent) {
+          alert('Insufficient YMP points.');
+          return;
+        }
+      }
+
+      if (finalWydaToPay > 0) {
+        const amountToPay = parseUnits(finalWydaToPay.toString(), 18);
+        console.log(`Transferring ${finalWydaToPay} WYDA to escrow...`);
+        const tx = await wyda.transfer(ESCROW_CONTRACT_ADDRESS, amountToPay);
+        await tx.wait();
+        console.log('Transfer successful!');
+      }
 
       // Automatically construct and "send" the notification email
       const recipient = 'loopyfy@proton.me';
@@ -74,7 +121,9 @@ export default function App() {
         `Subscription Tier: ${tier.name}\n` +
         `Subscription Unit Period: ${tier.period}\n` +
         `Pre-funded Duration: ${months} months\n` +
-        `Total Amount Transferred to Escrow: ${tier.price * months} WYDA\n\n` +
+        `Total Amount Transferred to Escrow: ${finalWydaToPay} WYDA\n` +
+        (useYMPAmount > 0 ? `YMP Points Used: ${useYMPAmount} (Equivalent to ${wydaDiscount} WYDA)\n` : '') +
+        `Total Value: ${totalWydaRequired} WYDA\n\n` +
         `Please verify the escrow transfer and update the subscription status accordingly.`
       );
 
@@ -90,7 +139,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans text-zinc-900 selection:bg-emerald-100 selection:text-emerald-900">
-      <Navbar account={account} onConnect={handleConnect} />
+      <Navbar account={account} onConnect={handleConnect} ympPoints={points} />
 
       {/* View Switcher (Only if connected) */}
       {account && (
@@ -106,6 +155,15 @@ export default function App() {
               Explore
             </button>
             <button
+              onClick={() => setView('arcade')}
+              className={`flex items-center gap-2 rounded-full px-6 py-2 text-sm font-bold transition-all ${
+                view === 'arcade' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'
+              }`}
+            >
+              <Gamepad2 className="h-4 w-4" />
+              Arcade
+            </button>
+            <button
               onClick={() => setView('dashboard')}
               className={`flex items-center gap-2 rounded-full px-6 py-2 text-sm font-bold transition-all ${
                 view === 'dashboard' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'
@@ -117,6 +175,26 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Reward Toast */}
+      <AnimatePresence>
+        {showRewardToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 50, x: '-50%' }}
+            className="fixed bottom-8 left-1/2 z-[100] flex items-center gap-3 rounded-2xl bg-zinc-900 px-6 py-4 text-white shadow-2xl"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500">
+              <Gift className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-bold">{showRewardToast.message}</p>
+              <p className="text-[10px] text-zinc-400">Keep it up to earn more!</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main>
         <AnimatePresence mode="wait">
@@ -267,6 +345,15 @@ export default function App() {
                 </div>
               </section>
             </motion.div>
+          ) : view === 'arcade' ? (
+            <motion.div
+              key="arcade"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <Arcade account={account} onGamePlayed={handleGamePlayed} />
+            </motion.div>
           ) : (
             <motion.div
               key="dashboard"
@@ -314,6 +401,7 @@ export default function App() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubscribe={handleSubscribe}
+        ympPoints={points}
       />
     </div>
   );

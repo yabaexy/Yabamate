@@ -15,17 +15,18 @@ interface CreatorDashboardProps {
 
 export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) => {
   const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState({
+    name: '',
+    bio: '',
+    avatar_url: '',
+  });
   const [stats, setStats] = useState({
     totalSupporters: 0,
     totalEarned: '0.00',
     availableToWithdraw: '0.00',
   });
 
-  // Tier creation state
-  const [tiers, setTiers] = useState([
-    { name: 'Supporter', price: 10, period: 'Monthly', desc: 'Basic support for my creative journey.' },
-    { name: 'Collector', price: 50, period: 'Monthly', desc: 'For serious art lovers.' },
-  ]);
+  const [tiers, setTiers] = useState<any[]>([]);
   const [newTier, setNewTier] = useState({
     name: '',
     priceWyda: '',
@@ -33,26 +34,90 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
     description: '',
   });
 
-  const handleCreateTier = () => {
+  useEffect(() => {
+    if (account) {
+      fetch(`/api/user/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: account }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          setProfile({
+            name: data.name || '',
+            bio: data.bio || '',
+            avatar_url: data.avatar_url || '',
+          });
+        });
+
+      fetch(`/api/tiers/${account}`)
+        .then(res => res.json())
+        .then(data => setTiers(data));
+    }
+  }, [account]);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('address', account);
+    formData.append('name', profile.name);
+    formData.append('bio', profile.bio);
+    
+    const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
+    if (fileInput?.files?.[0]) {
+      formData.append('avatar', fileInput.files[0]);
+    }
+
+    try {
+      const res = await fetch('/api/user/update', {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        alert('Profile updated!');
+        window.location.reload();
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateTier = async () => {
     if (!newTier.name || !newTier.priceWyda) {
       alert('Please fill in at least the name and price.');
       return;
     }
 
     const tier = {
+      id: Math.random().toString(36).substr(2, 9),
+      creator_address: account,
       name: newTier.name,
       price: parseFloat(newTier.priceWyda),
       period: newTier.period,
-      desc: newTier.description || 'No description provided.',
+      description: newTier.description || 'No description provided.',
     };
 
-    setTiers([...tiers, tier]);
-    setNewTier({
-      name: '',
-      priceWyda: '',
-      period: 'Monthly',
-      description: '',
-    });
+    try {
+      const res = await fetch('/api/tiers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tier),
+      });
+      if (res.ok) {
+        setTiers([...tiers, tier]);
+        setNewTier({
+          name: '',
+          priceWyda: '',
+          period: 'Monthly',
+          description: '',
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleWydaChange = (val: string) => {
@@ -113,18 +178,63 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
         ))}
       </div>
 
-      <div className="mt-8 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-zinc-900">WYDA Performance</h2>
-            <p className="text-sm text-zinc-500">Historical price performance against USDC (24h)</p>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-1.5 text-emerald-700">
-            <ChartIcon className="h-4 w-4" />
-            <span className="text-xs font-bold uppercase tracking-wider">Live Market</span>
-          </div>
+      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="lg:col-span-1 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
+          <h2 className="text-xl font-bold text-zinc-900">Edit Profile</h2>
+          <form onSubmit={handleUpdateProfile} className="mt-6 space-y-4">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-zinc-100 bg-zinc-50">
+                {profile.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-zinc-300">
+                    <Users className="h-10 w-10" />
+                  </div>
+                )}
+              </div>
+              <input type="file" id="avatar-upload" accept="image/*" className="text-xs text-zinc-500" />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-zinc-500">Display Name</label>
+              <input 
+                type="text" 
+                value={profile.name}
+                onChange={(e) => setProfile({...profile, name: e.target.value})}
+                className="mt-1 block w-full rounded-xl border-zinc-200 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-zinc-500">Bio</label>
+              <textarea 
+                value={profile.bio}
+                onChange={(e) => setProfile({...profile, bio: e.target.value})}
+                rows={3}
+                className="mt-1 block w-full rounded-xl border-zinc-200 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
+              />
+            </div>
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition-all disabled:opacity-50"
+            >
+              {loading ? 'Saving...' : 'Save Profile'}
+            </button>
+          </form>
         </div>
-        <PriceChart />
+
+        <div className="lg:col-span-2 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-zinc-900">WYDA Performance</h2>
+              <p className="text-sm text-zinc-500">Historical price performance against USDC (24h)</p>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-1.5 text-emerald-700">
+              <ChartIcon className="h-4 w-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">Live Market</span>
+            </div>
+          </div>
+          <PriceChart />
+        </div>
       </div>
 
       <div className="mt-8 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
@@ -204,7 +314,7 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
                     <div>
                       <h4 className="font-bold text-zinc-900">{tier.name}</h4>
                       <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">{tier.period}</p>
-                      <p className="mt-1 text-xs text-zinc-500">{tier.desc}</p>
+                      <p className="mt-1 text-xs text-zinc-500">{tier.description}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-black text-zinc-900">{tier.price} WYDA</p>

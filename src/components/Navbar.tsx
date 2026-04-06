@@ -1,13 +1,14 @@
 import React from 'react';
-import { Wallet, Search, Bell, User } from 'lucide-react';
+import { Wallet, Search, Bell, User, Trophy } from 'lucide-react';
 import { cn, formatAddress } from '../lib/utils';
 
 interface NavbarProps {
   account: string | null;
   onConnect: () => void;
+  ympPoints: number;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ account, onConnect }) => {
+export const Navbar: React.FC<NavbarProps> = ({ account, onConnect, ympPoints }) => {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-black/5 bg-white/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -30,6 +31,10 @@ export const Navbar: React.FC<NavbarProps> = ({ account, onConnect }) => {
         </div>
 
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20">
+            <Trophy className="h-3.5 w-3.5" />
+            {ympPoints} YMP
+          </div>
           <div className="relative hidden sm:block">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
             <input

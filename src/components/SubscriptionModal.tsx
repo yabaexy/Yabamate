@@ -8,7 +8,8 @@ interface SubscriptionModalProps {
   creator: Creator | null;
   isOpen: boolean;
   onClose: () => void;
-  onSubscribe: (tier: Tier, months: number) => Promise<void>;
+  onSubscribe: (tier: Tier, months: number, useYMPAmount: number) => Promise<void>;
+  ympPoints: number;
 }
 
 export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
@@ -16,18 +17,26 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   isOpen,
   onClose,
   onSubscribe,
+  ympPoints,
 }) => {
   const [selectedTier, setSelectedTier] = useState<Tier | null>(null);
   const [months, setMonths] = useState(1);
+  const [useYMP, setUseYMP] = useState(false);
   const [loading, setLoading] = useState(false);
 
   if (!creator) return null;
+
+  const YMP_TO_WYDA_RATE = 1000;
+  const totalWydaRequired = selectedTier ? selectedTier.price * months : 0;
+  const maxPossibleYMP = Math.min(ympPoints, totalWydaRequired * YMP_TO_WYDA_RATE);
+  const wydaCoveredByYMP = useYMP ? maxPossibleYMP / YMP_TO_WYDA_RATE : 0;
+  const finalWydaToPay = Math.max(0, totalWydaRequired - wydaCoveredByYMP);
 
   const handleSubscribe = async () => {
     if (!selectedTier) return;
     setLoading(true);
     try {
-      await onSubscribe(selectedTier, months);
+      await onSubscribe(selectedTier, months, useYMP ? maxPossibleYMP : 0);
       onClose();
     } catch (error) {
       console.error(error);
@@ -146,10 +155,44 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                       <span className="text-sm text-zinc-600">Total to Escrow</span>
                       <div className="text-right">
                         <p className="text-lg font-black text-zinc-900">
-                          {selectedTier.price * months} WYDA
+                          {totalWydaRequired} WYDA
                         </p>
                       </div>
                     </div>
+
+                    {ympPoints > 0 && (
+                      <div className="mt-4 border-t border-zinc-200 pt-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id="use-ymp"
+                              checked={useYMP}
+                              onChange={(e) => setUseYMP(e.target.checked)}
+                              className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+                            />
+                            <label htmlFor="use-ymp" className="text-sm font-medium text-zinc-700">
+                              Use YMP Points
+                            </label>
+                          </div>
+                          <span className="text-xs font-bold text-amber-600">
+                            {ympPoints} Available
+                          </span>
+                        </div>
+                        {useYMP && (
+                          <div className="mt-2 flex items-center justify-between rounded-xl bg-amber-50 p-3 text-xs">
+                            <span className="text-amber-800">Applying {maxPossibleYMP} YMP</span>
+                            <span className="font-bold text-amber-900">-{wydaCoveredByYMP} WYDA</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-4 border-t border-zinc-200 pt-4 flex items-center justify-between">
+                      <span className="text-sm font-bold text-zinc-900">Final WYDA Payment</span>
+                      <span className="text-xl font-black text-emerald-600">{finalWydaToPay} WYDA</span>
+                    </div>
+
                     <div className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 p-3 text-[10px] text-emerald-800">
                       <ShieldCheck className="h-4 w-4 shrink-0" />
                       <p>
@@ -163,7 +206,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                     disabled={loading}
                     className="w-full rounded-2xl bg-zinc-900 py-4 text-sm font-bold text-white transition-all hover:bg-zinc-800 active:scale-[0.98] disabled:opacity-50"
                   >
-                    {loading ? "Processing..." : `Confirm Subscription (${selectedTier.price * months} WYDA)`}
+                    {loading ? "Processing..." : `Confirm Subscription (${finalWydaToPay} WYDA)`}
                   </button>
                 </motion.div>
               )}
