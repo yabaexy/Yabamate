@@ -30,7 +30,8 @@ db.exec(`
     name TEXT,
     price REAL,
     period TEXT,
-    description TEXT
+    description TEXT,
+    auto_renew_enabled INTEGER DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS rankings (
@@ -191,9 +192,9 @@ async function startServer() {
   });
 
   app.post('/api/tiers', (req, res) => {
-    const { id, creator_address, name, price, period, description } = req.body;
-    db.prepare('INSERT OR REPLACE INTO tiers (id, creator_address, name, price, period, description) VALUES (?, ?, ?, ?, ?, ?)')
-      .run(id, creator_address, name, price, period, description);
+    const { id, creator_address, name, price, period, description, auto_renew_enabled } = req.body;
+    db.prepare('INSERT OR REPLACE INTO tiers (id, creator_address, name, price, period, description, auto_renew_enabled) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .run(id, creator_address, name, price, period, description, auto_renew_enabled ? 1 : 0);
     res.json({ success: true });
   });
 

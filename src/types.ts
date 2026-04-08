@@ -17,6 +17,7 @@ export interface Tier {
   period: 'Monthly' | 'Quarterly' | 'Yearly';
   description: string;
   benefits: string[];
+  auto_renew_enabled?: boolean | number;
 }
 
 export interface UserSubscription {

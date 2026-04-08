@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Creator, Tier } from '../types';
-import { X, Check, ShieldCheck, AlertCircle } from 'lucide-react';
+import { X, Check, ShieldCheck, AlertCircle, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 
@@ -108,6 +108,12 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                         WYDA / {tier.period === 'Monthly' ? 'mo' : tier.period === 'Quarterly' ? 'qtr' : 'yr'}
                       </span>
                     </div>
+                    {tier.auto_renew_enabled === 1 && (
+                      <div className="mt-2 flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                        <Clock className="h-3 w-3" />
+                        Auto-renewal Enabled
+                      </div>
+                    )}
                     <p className="mt-3 text-xs text-zinc-500">{tier.description}</p>
                     <ul className="mt-4 space-y-2">
                       {tier.benefits.map((benefit, i) => (

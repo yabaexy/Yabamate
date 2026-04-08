@@ -32,6 +32,7 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
     priceWyda: '',
     period: 'Monthly',
     description: '',
+    autoRenewEnabled: false,
   });
 
   useEffect(() => {
@@ -98,6 +99,7 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
       price: parseFloat(newTier.priceWyda),
       period: newTier.period,
       description: newTier.description || 'No description provided.',
+      auto_renew_enabled: newTier.autoRenewEnabled,
     };
 
     try {
@@ -113,6 +115,7 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
           priceWyda: '',
           period: 'Monthly',
           description: '',
+          autoRenewEnabled: false,
         });
       }
     } catch (e) {
@@ -295,6 +298,20 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
                 />
               </div>
 
+              <div className="flex items-center gap-3 rounded-xl border border-zinc-100 bg-white p-4">
+                <input 
+                  type="checkbox"
+                  id="auto-renew"
+                  checked={newTier.autoRenewEnabled}
+                  onChange={(e) => setNewTier({...newTier, autoRenewEnabled: e.target.checked})}
+                  className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <label htmlFor="auto-renew" className="text-xs font-bold text-zinc-700 cursor-pointer">
+                  Enable Auto-renewal
+                  <span className="block text-[10px] font-normal text-zinc-400">Automatically renew subscription using WYDA balance</span>
+                </label>
+              </div>
+
               <button 
                 onClick={handleCreateTier}
                 className="w-full rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white hover:bg-zinc-800 transition-all active:scale-95"
@@ -312,7 +329,14 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
                 tiers.map((tier, i) => (
                   <div key={i} className="flex items-center justify-between rounded-2xl border border-zinc-100 p-4">
                     <div>
-                      <h4 className="font-bold text-zinc-900">{tier.name}</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-zinc-900">{tier.name}</h4>
+                        {tier.auto_renew_enabled === 1 && (
+                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[8px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                            Auto-renew
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">{tier.period}</p>
                       <p className="mt-1 text-xs text-zinc-500">{tier.description}</p>
                     </div>
