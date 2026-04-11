@@ -8,6 +8,7 @@ import { PriceChart } from './PriceChart';
 
 const USDC_TOKEN_ADDRESS = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
 const APESWAP_URL = `https://apeswap.finance/swap?inputCurrency=${WYDA_TOKEN_ADDRESS}&outputCurrency=${USDC_TOKEN_ADDRESS}`;
+const APESWAP_LP_URL = `https://apeswap.finance/add-liquidity/0x55d398326f99059fF775485246999027B3197955/0xD84B7E8b295d9Fa9656527AC33Bf4F683aE7d2C4`;
 
 interface CreatorDashboardProps {
   account: string;
@@ -28,6 +29,7 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
 
   const [tiers, setTiers] = useState<any[]>([]);
   const [museLevel, setMuseLevel] = useState<number | null>(null);
+  const [lpUsdt, setLpUsdt] = useState<number>(80);
   const [newTier, setNewTier] = useState({
     name: '',
     priceWyda: '',
@@ -136,22 +138,16 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
     });
   };
 
-  const handleWithdraw = async () => {
-    setLoading(true);
-    try {
-      const provider = await getWeb3Provider();
-      const signer = await provider.getSigner();
-      const escrow = getEscrowContract(signer);
-      
-      // In a real app, we'd iterate over supporters or have a mapping for total available
-      // For this demo, we'll just show the UI action
-      alert('Withdrawal initiated. In a production app, this would call creatorWithdraw for each eligible supporter.');
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const lpRewards = [
+    { range: '$50 ~ $200', ymp: '8,000 YMP', benefits: 'Bronze Muse 스킨' },
+    { range: '$200 ~ $500', ymp: '22,000 YMP', benefits: 'Silver Muse 스킨 + 7일 상단 노출권' },
+    { range: '$500 ~ $1,000', ymp: '55,000 YMP', benefits: 'Gold Muse 스킨 + 15일 부스팅' },
+    { range: '$1,000 ~ $3,000', ymp: '150,000 YMP', benefits: 'Platinum Muse 세트 + 전용 배지' },
+    { range: '$3,000 이상', ymp: '400,000 YMP', benefits: 'Legendary Muse 스킨 + Muse 페이지 전용 프레임' },
+  ];
+
+  const calculatedWyda = (lpUsdt / 80) * 22400;
+  const dynamicLpUrl = `https://apeswap.finance/add-liquidity/0x55d398326f99059fF775485246999027B3197955/0xD84B7E8b295d9Fa9656527AC33Bf4F683aE7d2C4`;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -182,11 +178,10 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {[
           { label: 'Total Supporters', value: stats.totalSupporters, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
           { label: 'Total Earned', value: `${stats.totalEarned} WYDA`, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Available to Withdraw', value: `${stats.availableToWithdraw} WYDA`, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
         ].map((stat, i) => (
           <div key={i} className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
             <div className={cn("mb-4 flex h-12 w-12 items-center justify-center rounded-2xl", stat.bg)}>
@@ -373,32 +368,100 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
       </div>
 
       <div className="mt-8 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-zinc-900">Withdraw & Swap</h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Funds are released from escrow every 30 days. You can swap your WYDA to USDC via ApeSwap.
-            </p>
+        <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-zinc-900">Liquidity & Swap</h2>
+              <p className="mt-1 text-sm text-zinc-500">
+                Provide liquidity to earn massive YMP rewards and exclusive Muse skins.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href={APESWAP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-2xl bg-zinc-100 px-6 py-4 text-sm font-bold text-zinc-900 hover:bg-zinc-200 transition-all active:scale-95"
+              >
+                <ArrowRightLeft className="h-4 w-4" />
+                Swap on ApeSwap
+                <ExternalLink className="h-3 w-3 opacity-50" />
+              </a>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <a
-              href={APESWAP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-2xl bg-zinc-100 px-6 py-4 text-sm font-bold text-zinc-900 hover:bg-zinc-200 transition-all active:scale-95"
-            >
-              <ArrowRightLeft className="h-4 w-4" />
-              Swap on ApeSwap
-              <ExternalLink className="h-3 w-3 opacity-50" />
-            </a>
-            <button
-              onClick={handleWithdraw}
-              disabled={loading}
-              className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-8 py-4 text-sm font-bold text-white hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50"
-            >
-              <Download className="h-4 w-4" />
-              {loading ? 'Processing...' : 'Withdraw Available Funds'}
-            </button>
+
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/30 p-6">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end">
+              <div className="flex-1">
+                <label className="text-xs font-bold uppercase tracking-wider text-emerald-700">USDT Amount (Min $50)</label>
+                <div className="mt-2 flex items-center gap-4">
+                  <div className="relative flex-1">
+                    <input 
+                      type="number" 
+                      min="50"
+                      value={lpUsdt}
+                      onChange={(e) => setLpUsdt(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="block w-full rounded-xl border-emerald-200 bg-white py-3 pl-4 pr-12 text-lg font-bold text-zinc-900 focus:border-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-zinc-400">USDT</span>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                    <ArrowRightLeft className="h-6 w-6" />
+                  </div>
+                  <div className="relative flex-1">
+                    <div className="block w-full rounded-xl border border-emerald-200 bg-zinc-50 py-3 pl-4 pr-12 text-lg font-bold text-zinc-400">
+                      {calculatedWyda.toLocaleString()}
+                    </div>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-zinc-400">WYDA</span>
+                  </div>
+                </div>
+                <p className="mt-2 text-[10px] font-medium text-emerald-600">
+                  Rate: 80 USDT = 22,400 WYDA (1 USDT ≈ 280 WYDA)
+                </p>
+              </div>
+              <a
+                href={dynamicLpUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  "flex h-14 items-center justify-center gap-3 rounded-2xl px-8 text-sm font-bold text-white transition-all active:scale-95",
+                  lpUsdt >= 50 ? "bg-emerald-600 hover:bg-emerald-700" : "bg-zinc-300 cursor-not-allowed"
+                )}
+                onClick={(e) => lpUsdt < 50 && e.preventDefault()}
+              >
+                <Sparkles className="h-5 w-5" />
+                Add LP on ApeSwap
+                <ExternalLink className="h-4 w-4 opacity-50" />
+              </a>
+            </div>
+            {lpUsdt < 50 && (
+              <p className="mt-2 text-xs font-bold text-red-500">Minimum liquidity provision is $50 USDT.</p>
+            )}
+          </div>
+        </div>
+
+        {/* LP Reward Table */}
+        <div className="mt-12">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400">LP Provider Rewards (30 Days)</h3>
+          <div className="mt-4 overflow-hidden rounded-2xl border border-zinc-100">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-zinc-900 text-white">
+                <tr>
+                  <th className="px-6 py-4 font-bold">LP 제공 규모 (30일 기준)</th>
+                  <th className="px-6 py-4 font-bold">YMP 지급량 (30일)</th>
+                  <th className="px-6 py-4 font-bold">추가 혜택</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {lpRewards.map((reward, i) => (
+                  <tr key={i} className="hover:bg-zinc-50/50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-zinc-900">{reward.range}</td>
+                    <td className="px-6 py-4 text-emerald-600 font-bold">{reward.ymp}</td>
+                    <td className="px-6 py-4 text-zinc-600">{reward.benefits}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 

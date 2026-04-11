@@ -132,6 +132,27 @@ async function initDb() {
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS muse_stories (
+        id SERIAL PRIMARY KEY,
+        user_address TEXT,
+        level INTEGER,
+        title TEXT,
+        content TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS muse_generated_images (
+        id SERIAL PRIMARY KEY,
+        user_address TEXT,
+        prompt TEXT,
+        image_url TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
     console.log('Database initialized');
   } catch (error) {
     console.error('Failed to initialize database:', error);
@@ -554,6 +575,53 @@ async function startServer() {
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Failed to process sponsorship' });
+    }
+  });
+
+  app.post('/api/muse/ai/save-image', async (req, res) => {
+    const { address, prompt, base64Data } = req.body;
+    try {
+      // Convert base64 to buffer
+      const buffer = Buffer.from(base64Data, 'base64');
+      
+      const blob = await put(`muse-ai/${address}-${Date.now()}.png`, buffer, {
+        access: 'public',
+        token: process.env.BLOB_READ_WRITE_TOKEN
+      });
+
+      await sql`
+        INSERT INTO muse_generated_images (user_address, prompt, image_url) 
+        VALUES (${address}, ${prompt}, ${blob.url})
+      `;
+
+      res.json({ success: true, url: blob.url });
+    } catch (error) {
+      console.error('Failed to save AI image:', error);
+      res.status(500).json({ error: 'Failed to save AI image' });
+    }
+  });
+
+  app.post('/api/muse/ai/save-story', async (req, res) => {
+    const { address, level, title, content } = req.body;
+    try {
+      await sql`
+        INSERT INTO muse_stories (user_address, level, title, content) 
+        VALUES (${address}, ${level}, ${title}, ${content})
+      `;
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to save story' });
+    }
+  });
+
+  app.get('/api/muse/ai/history/:address', async (req, res) => {
+    const { address } = req.params;
+    try {
+      const images = await sql`SELECT * FROM muse_generated_images WHERE user_address = ${address} ORDER BY timestamp DESC`;
+      const stories = await sql`SELECT * FROM muse_stories WHERE user_address = ${address} ORDER BY timestamp DESC`;
+      res.json({ images, stories });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch AI history' });
     }
   });
 
