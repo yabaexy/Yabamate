@@ -4,19 +4,20 @@ import { CreatorCard } from './components/CreatorCard';
 import { SubscriptionModal } from './components/SubscriptionModal';
 import { CreatorDashboard } from './components/CreatorDashboard';
 import { Arcade } from './components/Arcade';
+import { MuseDashboard } from './components/MuseDashboard';
 import { MOCK_CREATORS } from './mockData';
 import { Creator, Tier } from './types';
 import { connectWallet, getWydaContract, WYDA_TOKEN_ADDRESS, ESCROW_CONTRACT_ADDRESS } from './lib/web3';
 import { useYMP, YMP_TO_WYDA_RATE } from './hooks/useYMP';
 import { parseUnits } from 'ethers';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shield, Zap, Heart, Globe, ArrowRight, LayoutDashboard, Compass, Gamepad2, Gift } from 'lucide-react';
+import { Shield, Zap, Heart, Globe, ArrowRight, LayoutDashboard, Compass, Gamepad2, Gift, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [account, setAccount] = useState<string | null>(null);
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [view, setView] = useState<'explore' | 'dashboard' | 'arcade'>('explore');
+  const [view, setView] = useState<'explore' | 'dashboard' | 'arcade' | 'muse'>('explore');
   const [showRewardToast, setShowRewardToast] = useState<{ points: number; message: string } | null>(null);
 
   const { points, checkAttendance, markGamePlayed, spendPoints } = useYMP(account);
@@ -111,6 +112,18 @@ export default function App() {
         console.log('Transfer successful!');
       }
 
+      // Record sponsorship for Muse missions
+      await fetch('/api/sponsorship', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: account,
+          creatorAddress: selectedCreator.address,
+          amount: finalWydaToPay,
+          isRecurring: tier.auto_renew_enabled === 1
+        })
+      });
+
       // Automatically construct and "send" the notification email
       const recipient = 'loopyfy@proton.me';
       const subject = encodeURIComponent(`[Escrow Notification] New Subscription for ${selectedCreator.name}`);
@@ -162,6 +175,15 @@ export default function App() {
             >
               <Gamepad2 className="h-4 w-4" />
               Arcade
+            </button>
+            <button
+              onClick={() => setView('muse')}
+              className={`flex items-center gap-2 rounded-full px-6 py-2 text-sm font-bold transition-all ${
+                view === 'muse' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'
+              }`}
+            >
+              <Sparkles className="h-4 w-4" />
+              Muse
             </button>
             <button
               onClick={() => setView('dashboard')}
@@ -353,6 +375,15 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
             >
               <Arcade account={account} onGamePlayed={handleGamePlayed} />
+            </motion.div>
+          ) : view === 'muse' ? (
+            <motion.div
+              key="muse"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              {account && <MuseDashboard account={account} />}
             </motion.div>
           ) : (
             <motion.div

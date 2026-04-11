@@ -3,6 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { neon } from '@neondatabase/serverless';
+import { put } from '@vercel/blob';
 import multer from 'multer';
 import fs from 'fs';
 import dotenv from 'dotenv';
@@ -68,6 +69,69 @@ async function initDb() {
         PRIMARY KEY (user_address, game_id, date)
       );
     `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS muses (
+        user_address TEXT PRIMARY KEY,
+        name TEXT,
+        level INTEGER DEFAULT 1,
+        exp INTEGER DEFAULT 0,
+        charm INTEGER DEFAULT 0,
+        talent INTEGER DEFAULT 0,
+        fanbase INTEGER DEFAULT 0,
+        skin_id TEXT DEFAULT 'default',
+        background_id TEXT DEFAULT 'default'
+      );
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS sponsorships (
+        id SERIAL PRIMARY KEY,
+        user_address TEXT,
+        creator_address TEXT,
+        amount REAL,
+        is_recurring INTEGER DEFAULT 0,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS muse_missions_progress (
+        user_address TEXT,
+        mission_id TEXT,
+        progress INTEGER DEFAULT 0,
+        date TEXT,
+        completed INTEGER DEFAULT 0,
+        PRIMARY KEY (user_address, mission_id, date)
+      );
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS muse_achievements_unlocked (
+        user_address TEXT,
+        achievement_id TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_address, achievement_id)
+      );
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS muse_skins_unlocked (
+        user_address TEXT,
+        skin_id TEXT,
+        PRIMARY KEY (user_address, skin_id)
+      );
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS muse_interactions (
+        id SERIAL PRIMARY KEY,
+        from_address TEXT,
+        to_address TEXT,
+        message TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
     console.log('Database initialized');
   } catch (error) {
     console.error('Failed to initialize database:', error);
@@ -82,25 +146,9 @@ async function startServer() {
 
   app.use(express.json());
 
-  // Multer setup for file uploads
-  const uploadDir = path.join(process.cwd(), 'uploads');
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-  }
-
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-  });
-
+  // Multer setup for memory storage (to upload to Blob)
+  const storage = multer.memoryStorage();
   const upload = multer({ storage });
-
-  app.use('/uploads', express.static('uploads'));
 
   // API Routes
   
@@ -123,9 +171,17 @@ async function startServer() {
 
   app.post('/api/user/update', upload.single('avatar'), async (req, res) => {
     const { address, name, bio } = req.body;
-    const avatar_url = req.file ? `/uploads/${req.file.filename}` : undefined;
+    let avatar_url = undefined;
 
     try {
+      if (req.file) {
+        const blob = await put(`avatars/${address}-${Date.now()}${path.extname(req.file.originalname)}`, req.file.buffer, {
+          access: 'public',
+          token: process.env.BLOB_READ_WRITE_TOKEN
+        });
+        avatar_url = blob.url;
+      }
+
       if (avatar_url) {
         await sql`
           UPDATE users 
@@ -139,8 +195,9 @@ async function startServer() {
           WHERE address = ${address}
         `;
       }
-      res.json({ success: true });
+      res.json({ success: true, avatar_url });
     } catch (error) {
+      console.error('Failed to update user:', error);
       res.status(500).json({ error: 'Failed to update user' });
     }
   });
@@ -305,6 +362,198 @@ async function startServer() {
       res.json(rankings);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch rankings' });
+    }
+  });
+
+  // Muse API
+  app.get('/api/muse/:address', async (req, res) => {
+    const { address } = req.params;
+    try {
+      const muses = await sql`SELECT * FROM muses WHERE user_address = ${address}`;
+      if (muses.length === 0) {
+        return res.status(404).json({ error: 'Muse not found' });
+      }
+      res.json(muses[0]);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch Muse' });
+    }
+  });
+
+  app.post('/api/muse/sync', async (req, res) => {
+    const { address } = req.body;
+    try {
+      let muses = await sql`SELECT * FROM muses WHERE user_address = ${address}`;
+      if (muses.length === 0) {
+        await sql`INSERT INTO muses (user_address, name) VALUES (${address}, 'My Muse')`;
+        muses = await sql`SELECT * FROM muses WHERE user_address = ${address}`;
+      }
+      res.json(muses[0]);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to sync Muse' });
+    }
+  });
+
+  app.post('/api/muse/update-name', async (req, res) => {
+    const { address, name } = req.body;
+    try {
+      await sql`UPDATE muses SET name = ${name} WHERE user_address = ${address}`;
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update Muse name' });
+    }
+  });
+
+  app.get('/api/muse/missions/:address', async (req, res) => {
+    const { address } = req.params;
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      const missions = await sql`
+        SELECT * FROM muse_missions_progress 
+        WHERE user_address = ${address} AND date = ${today}
+      `;
+      res.json(missions);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch missions' });
+    }
+  });
+
+  app.post('/api/muse/interact', async (req, res) => {
+    const { from, to, message } = req.body;
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      await sql`
+        INSERT INTO muse_interactions (from_address, to_address, message) 
+        VALUES (${from}, ${to}, ${message})
+      `;
+      
+      // Update mission: "다른 Muse 페이지 방문 및 응원 메시지 남기기 5회"
+      const missionId = 'daily_interact';
+      const progressResult = await sql`
+        SELECT * FROM muse_missions_progress 
+        WHERE user_address = ${from} AND mission_id = ${missionId} AND date = ${today}
+      `;
+      
+      if (progressResult.length === 0) {
+        await sql`
+          INSERT INTO muse_missions_progress (user_address, mission_id, progress, date) 
+          VALUES (${from}, mission_id, 1, ${today})
+        `;
+      } else if (progressResult[0].completed === 0) {
+        const newProgress = progressResult[0].progress + 1;
+        let completed = 0;
+        if (newProgress >= 5) {
+          completed = 1;
+          // Award YMP
+          await sql`UPDATE users SET points = points + 350 WHERE address = ${from}`;
+          // Award Muse EXP
+          await sql`UPDATE muses SET exp = exp + 50 WHERE user_address = ${from}`;
+        }
+        await sql`
+          UPDATE muse_missions_progress 
+          SET progress = ${newProgress}, completed = ${completed} 
+          WHERE user_address = ${from} AND mission_id = ${missionId} AND date = ${today}
+        `;
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to interact' });
+    }
+  });
+
+  app.post('/api/sponsorship', async (req, res) => {
+    const { address, creatorAddress, amount, isRecurring } = req.body;
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      // 1. Record sponsorship
+      await sql`
+        INSERT INTO sponsorships (user_address, creator_address, amount, is_recurring) 
+        VALUES (${address}, ${creatorAddress}, ${amount}, ${isRecurring ? 1 : 0})
+      `;
+
+      // 2. Update Daily Missions
+      
+      // Mission: "Yabamate에서 후원 3회 이상 하기" -> 450 YMP
+      const mCountId = 'daily_sponsor_count';
+      const countRes = await sql`
+        SELECT * FROM muse_missions_progress 
+        WHERE user_address = ${address} AND mission_id = ${mCountId} AND date = ${today}
+      `;
+      if (countRes.length === 0) {
+        await sql`INSERT INTO muse_missions_progress (user_address, mission_id, progress, date) VALUES (${address}, ${mCountId}, 1, ${today})`;
+      } else if (countRes[0].completed === 0) {
+        const newProgress = countRes[0].progress + 1;
+        let completed = 0;
+        if (newProgress >= 3) {
+          completed = 1;
+          await sql`UPDATE users SET points = points + 450 WHERE address = ${address}`;
+          await sql`UPDATE muses SET exp = exp + 100 WHERE user_address = ${address}`;
+        }
+        await sql`UPDATE muse_missions_progress SET progress = ${newProgress}, completed = ${completed} WHERE user_address = ${address} AND mission_id = ${mCountId} AND date = ${today}`;
+      }
+
+      // Mission: "누적 후원 금액 250 WYDA 이상" -> 650 YMP
+      const mAmountId = 'daily_sponsor_amount';
+      const amountRes = await sql`
+        SELECT * FROM muse_missions_progress 
+        WHERE user_address = ${address} AND mission_id = ${mAmountId} AND date = ${today}
+      `;
+      if (amountRes.length === 0) {
+        await sql`INSERT INTO muse_missions_progress (user_address, mission_id, progress, date) VALUES (${address}, ${mAmountId}, ${amount}, ${today})`;
+      } else if (amountRes[0].completed === 0) {
+        const newProgress = amountRes[0].progress + amount;
+        let completed = 0;
+        if (newProgress >= 250) {
+          completed = 1;
+          await sql`UPDATE users SET points = points + 650 WHERE address = ${address}`;
+          await sql`UPDATE muses SET exp = exp + 150 WHERE user_address = ${address}`;
+        }
+        await sql`UPDATE muse_missions_progress SET progress = ${newProgress}, completed = ${completed} WHERE user_address = ${address} AND mission_id = ${mAmountId} AND date = ${today}`;
+      }
+
+      // Mission: "신규 크리에이터에게 첫 후원 하기" -> 550 YMP
+      const mNewId = 'daily_new_creator';
+      const prevSponsors = await sql`
+        SELECT COUNT(*) as count FROM sponsorships 
+        WHERE user_address = ${address} AND creator_address = ${creatorAddress} AND timestamp < CURRENT_TIMESTAMP - INTERVAL '1 second'
+      `;
+      if (parseInt(prevSponsors[0].count) === 0) {
+        const newCreatorRes = await sql`
+          SELECT * FROM muse_missions_progress 
+          WHERE user_address = ${address} AND mission_id = ${mNewId} AND date = ${today}
+        `;
+        if (newCreatorRes.length === 0 || newCreatorRes[0].completed === 0) {
+          await sql`
+            INSERT INTO muse_missions_progress (user_address, mission_id, progress, date, completed) 
+            VALUES (${address}, ${mNewId}, 1, ${today}, 1)
+            ON CONFLICT (user_address, mission_id, date) DO UPDATE SET completed = 1
+          `;
+          await sql`UPDATE users SET points = points + 550 WHERE address = ${address}`;
+          await sql`UPDATE muses SET exp = exp + 120 WHERE user_address = ${address}`;
+        }
+      }
+
+      // Check for Level Up
+      const museRes = await sql`SELECT * FROM muses WHERE user_address = ${address}`;
+      if (museRes.length > 0) {
+        let { level, exp } = museRes[0];
+        while (exp >= level * 100 && level < 100) {
+          exp -= level * 100;
+          level += 1;
+          // Level up bonus stats
+          await sql`
+            UPDATE muses 
+            SET level = ${level}, exp = ${exp}, 
+                charm = charm + 5, talent = talent + 5, fanbase = fanbase + 5 
+            WHERE user_address = ${address}
+          `;
+        }
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to process sponsorship' });
     }
   });
 

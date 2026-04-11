@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, Download, Users, TrendingUp, Clock, LineChart as ChartIcon, ExternalLink, ArrowRightLeft } from 'lucide-react';
+import { Wallet, Download, Users, TrendingUp, Clock, LineChart as ChartIcon, ExternalLink, ArrowRightLeft, Sparkles } from 'lucide-react';
 import { getEscrowContract, getWeb3Provider, WYDA_TOKEN_ADDRESS } from '../lib/web3';
 import { formatAddress, formatWyda } from '../lib/utils';
 import { motion } from 'motion/react';
@@ -27,6 +27,7 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
   });
 
   const [tiers, setTiers] = useState<any[]>([]);
+  const [museLevel, setMuseLevel] = useState<number | null>(null);
   const [newTier, setNewTier] = useState({
     name: '',
     priceWyda: '',
@@ -54,6 +55,11 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
       fetch(`/api/tiers/${account}`)
         .then(res => res.json())
         .then(data => setTiers(data));
+
+      fetch(`/api/muse/${account}`)
+        .then(res => res.json())
+        .then(data => setMuseLevel(data.level))
+        .catch(() => setMuseLevel(null));
     }
   }, [account]);
 
@@ -163,6 +169,17 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
             <p className="text-sm font-bold text-zinc-900">{formatAddress(account)}</p>
           </div>
         </div>
+        {museLevel !== null && (
+          <div className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">My Muse</p>
+              <p className="text-sm font-bold text-zinc-900">Lv.{museLevel}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
