@@ -14,14 +14,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const dbUrl = process.env.DATABASE_URL;
-if (!dbUrl || !dbUrl.startsWith('postgres')) {
+const isValidDbUrl = dbUrl && dbUrl.startsWith('postgres');
+
+if (!isValidDbUrl) {
   console.error('CRITICAL: DATABASE_URL is not set or is invalid. Please set it in Settings > Secrets.');
 }
 
-const sql = neon(dbUrl || 'postgresql://placeholder:placeholder@localhost:5432/placeholder');
+// Only initialize neon if the URL is valid to avoid immediate crash
+const sql = isValidDbUrl 
+  ? neon(dbUrl) 
+  : ((...args: any[]) => { 
+      console.error('Database operation attempted but DATABASE_URL is invalid.');
+      throw new Error('Database not configured'); 
+    }) as any;
 
 async function initDb() {
-  if (!dbUrl || !dbUrl.startsWith('postgres')) {
+  if (!isValidDbUrl) {
     console.warn('Skipping database initialization: DATABASE_URL is missing or invalid.');
     return;
   }
