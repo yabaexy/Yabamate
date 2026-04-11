@@ -29,7 +29,6 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
 
   const [tiers, setTiers] = useState<any[]>([]);
   const [museLevel, setMuseLevel] = useState<number | null>(null);
-  const [lpUsdt, setLpUsdt] = useState<number>(80);
   const [newTier, setNewTier] = useState({
     name: '',
     priceWyda: '',
@@ -145,9 +144,6 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
     { range: '$1,000 ~ $3,000', ymp: '150,000 YMP', benefits: 'Platinum Muse 세트 + 전용 배지' },
     { range: '$3,000 이상', ymp: '400,000 YMP', benefits: 'Legendary Muse 스킨 + Muse 페이지 전용 프레임' },
   ];
-
-  const calculatedWyda = (lpUsdt / 80) * 22400;
-  const dynamicLpUrl = `https://apeswap.finance/add-liquidity/0x55d398326f99059fF775485246999027B3197955/0xD84B7E8b295d9Fa9656527AC33Bf4F683aE7d2C4`;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -368,75 +364,34 @@ export const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ account }) =
       </div>
 
       <div className="mt-8 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
-        <div className="flex flex-col gap-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-zinc-900">Liquidity & Swap</h2>
-              <p className="mt-1 text-sm text-zinc-500">
-                Provide liquidity to earn massive YMP rewards and exclusive Muse skins.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <a
-                href={APESWAP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-2xl bg-zinc-100 px-6 py-4 text-sm font-bold text-zinc-900 hover:bg-zinc-200 transition-all active:scale-95"
-              >
-                <ArrowRightLeft className="h-4 w-4" />
-                Swap on ApeSwap
-                <ExternalLink className="h-3 w-3 opacity-50" />
-              </a>
-            </div>
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-zinc-900">Liquidity & Swap</h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Provide liquidity to earn massive YMP rewards and exclusive Muse skins.
+            </p>
           </div>
-
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/30 p-6">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end">
-              <div className="flex-1">
-                <label className="text-xs font-bold uppercase tracking-wider text-emerald-700">USDT Amount (Min $50)</label>
-                <div className="mt-2 flex items-center gap-4">
-                  <div className="relative flex-1">
-                    <input 
-                      type="number" 
-                      min="50"
-                      value={lpUsdt}
-                      onChange={(e) => setLpUsdt(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="block w-full rounded-xl border-emerald-200 bg-white py-3 pl-4 pr-12 text-lg font-bold text-zinc-900 focus:border-emerald-500 focus:ring-emerald-500"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-zinc-400">USDT</span>
-                  </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                    <ArrowRightLeft className="h-6 w-6" />
-                  </div>
-                  <div className="relative flex-1">
-                    <div className="block w-full rounded-xl border border-emerald-200 bg-zinc-50 py-3 pl-4 pr-12 text-lg font-bold text-zinc-400">
-                      {calculatedWyda.toLocaleString()}
-                    </div>
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-zinc-400">WYDA</span>
-                  </div>
-                </div>
-                <p className="mt-2 text-[10px] font-medium text-emerald-600">
-                  Rate: 80 USDT = 22,400 WYDA (1 USDT ≈ 280 WYDA)
-                </p>
-              </div>
-              <a
-                href={dynamicLpUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(
-                  "flex h-14 items-center justify-center gap-3 rounded-2xl px-8 text-sm font-bold text-white transition-all active:scale-95",
-                  lpUsdt >= 50 ? "bg-emerald-600 hover:bg-emerald-700" : "bg-zinc-300 cursor-not-allowed"
-                )}
-                onClick={(e) => lpUsdt < 50 && e.preventDefault()}
-              >
-                <Sparkles className="h-5 w-5" />
-                Add LP on ApeSwap
-                <ExternalLink className="h-4 w-4 opacity-50" />
-              </a>
-            </div>
-            {lpUsdt < 50 && (
-              <p className="mt-2 text-xs font-bold text-red-500">Minimum liquidity provision is $50 USDT.</p>
-            )}
+          <div className="flex flex-wrap gap-3">
+            <a
+              href={APESWAP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-2xl bg-zinc-100 px-6 py-4 text-sm font-bold text-zinc-900 hover:bg-zinc-200 transition-all active:scale-95"
+            >
+              <ArrowRightLeft className="h-4 w-4" />
+              Swap on ApeSwap
+              <ExternalLink className="h-3 w-3 opacity-50" />
+            </a>
+            <a
+              href={APESWAP_LP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-8 py-4 text-sm font-bold text-white hover:bg-emerald-700 transition-all active:scale-95"
+            >
+              <Sparkles className="h-4 w-4" />
+              WYDA LP on ApeSwap
+              <ExternalLink className="h-3 w-3 opacity-50" />
+            </a>
           </div>
         </div>
 
