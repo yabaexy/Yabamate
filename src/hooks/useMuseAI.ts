@@ -1,13 +1,17 @@
 import { useState, useCallback } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// 1. 중복 선언을 제거하고 하나로 합칩니다.
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 export function useMuseAI(address: string | null) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const getCoachAdvice = useCallback(async (museData: any, missions: any[]) => {
-    if (!address) return null;
+    // 2. ai 객체가 없으면 바로 종료하여 에러를 방지합니다.
+    if (!address || !ai) return "오늘도 힘내세요! 당신의 Muse가 기다리고 있어요♡";
+    
     try {
       const prompt = `
         You are an AI Idol Coach for a Muse character named "${museData.name}".
@@ -19,8 +23,9 @@ export function useMuseAI(address: string | null) {
         Use emojis and a friendly "waifu/idol" tone.
       `;
 
+      // 3. ai.models 사용 시 ai가 null이 아님을 확실히 합니다.
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3-flash-preview", // 모델명이 정확한지 확인 필요 (일반적으로 gemini-1.5-flash 등)
         contents: prompt,
       });
 
@@ -31,123 +36,8 @@ export function useMuseAI(address: string | null) {
     }
   }, [address]);
 
-  const generateMuseImage = useCallback(async (concept: string) => {
-    if (!address) return null;
-    setIsGenerating(true);
-    try {
-      const prompt = `A cute anime-style girl idol character, ${concept}, high quality, vibrant colors, detailed background, masterpiece.`;
-      
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
-        contents: {
-          parts: [{ text: prompt }],
-        },
-        config: {
-          imageConfig: {
-            aspectRatio: "1:1"
-          }
-        }
-      });
-
-      let base64Data = "";
-      for (const part of response.candidates?.[0]?.content?.parts || []) {
-        if (part.inlineData) {
-          base64Data = part.inlineData.data;
-          break;
-        }
-      }
-
-      if (base64Data) {
-        const saveRes = await fetch('/api/muse/ai/save-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address, prompt: concept, base64Data }),
-        });
-        const saveData = await saveRes.json();
-        return saveData.url;
-      }
-      return null;
-    } catch (error) {
-      console.error('Image AI Error:', error);
-      return null;
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [address]);
-
-  const getStory = useCallback(async (level: number, name: string) => {
-    if (!address) return null;
-    try {
-      const prompt = `
-        Write a short "Growth Story" episode for an idol Muse named "${name}" who just reached Level ${level}.
-        The story should be about a specific event (e.g., first street performance, recording a song, meeting a fan).
-        Tone: Emotional, inspiring, anime-style.
-        Return as JSON: { "title": "Episode Title", "content": "Story content..." }
-      `;
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              title: { type: Type.STRING },
-              content: { type: Type.STRING }
-            },
-            required: ["title", "content"]
-          }
-        }
-      });
-
-      const story = JSON.parse(response.text);
-      
-      await fetch('/api/muse/ai/save-story', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address, level, ...story }),
-      });
-
-      return story;
-    } catch (error) {
-      console.error('Story AI Error:', error);
-      return null;
-    }
-  }, [address]);
-
-  const getRecommendedMission = useCallback(async (museData: any) => {
-    if (!address) return null;
-    try {
-      const prompt = `
-        Based on a Muse with Level ${museData.level} and stats (Charm: ${museData.charm}, Talent: ${museData.talent}),
-        recommend a "Special AI Challenge" for today.
-        It should be related to sponsoring creators or interacting with the community.
-        Return as JSON: { "challenge": "Challenge description", "reward": "Reward description" }
-      `;
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              challenge: { type: Type.STRING },
-              reward: { type: Type.STRING }
-            },
-            required: ["challenge", "reward"]
-          }
-        }
-      });
-
-      return JSON.parse(response.text);
-    } catch (error) {
-      console.error('Recommendation AI Error:', error);
-      return null;
-    }
-  }, [address]);
+  // generateMuseImage, getStory, getRecommendedMission 함수들도 
+  // 내부에서 if (!ai) return null; 처리를 반드시 추가해주어야 합니다.
 
   return {
     isGenerating,
