@@ -23,33 +23,39 @@ export function useMuse(address: string | null) {
   const [missions, setMissions] = useState<MissionProgress[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchMuse = useCallback(async () => {
-    if (!address) return;
-    setLoading(true);
-    try {
-      const [museRes, missionRes] = await Promise.all([
-        fetch(`/api/muse/sync`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address }),
-        }),
-        fetch(`/api/muse/missions/${address}`)
-      ]);
+const fetchMuse = useCallback(async () => {
+  if (!address) return;
+  setLoading(true);
+  try {
+    const [museRes, missionRes] = await Promise.all([
+      fetch(`/api/muse/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address }),
+      }),
+      fetch(`/api/muse/missions/${address}`)
+    ]);
 
-      if (museRes.ok) {
-        const data = await museRes.json();
-        setMuse(data);
-      }
-      if (missionRes.ok) {
-        const data = await missionRes.json();
-        setMissions(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch Muse data:', error);
-    } finally {
-      setLoading(false);
+    // [수선] 응답이 성공적일 때만 파싱하고, 데이터가 없으면 기본값 처리
+    if (museRes.ok) {
+      const data = await museRes.json();
+      setMuse(data || null); // 데이터가 undefined일 경우 대비
+    } else {
+      console.error('Server responded with error:', museRes.status);
     }
-  }, [address]);
+
+    if (missionRes.ok) {
+      const data = await missionRes.json();
+      setMissions(Array.isArray(data) ? data : []); // 배열이 아닐 경우 대비
+    }
+  } catch (error) {
+    console.error('Failed to fetch Muse data:', error);
+    // 에러 발생 시 초기화하여 무한 로딩 방지
+    setMuse(null);
+  } finally {
+    setLoading(false);
+  }
+}, [address]);
 
   useEffect(() => {
     fetchMuse();
