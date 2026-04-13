@@ -37,13 +37,21 @@ export function useMuse(address: string | null) {
       ]);
 
       if (museRes.ok) {
+     const contentType = museRes.headers.get("content-type");
+       if (contentType && contentType.includes("application/json")) {
         const data = await museRes.json();
         setMuse(data);
-      }
-      if (missionRes.ok) {
-        const data = await missionRes.json();
-        setMissions(data);
-      }
+        } else {
+       console.warn("Muse API가 JSON을 반환하지 않았습니다. (404 가능성)");
+  }
+}
+     if (missionRes.ok) {
+      const contentType = missionRes.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+       const data = await missionRes.json();
+       setMissions(Array.isArray(data) ? data : []);
+     }
+}
     } catch (error) {
       console.error('Failed to fetch Muse data:', error);
     } finally {

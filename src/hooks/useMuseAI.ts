@@ -43,15 +43,17 @@ const getCoachAdvice = useCallback(async (museData: any, missions: any[]) => {
     try {
       const prompt = `A cute anime-style girl idol character, ${concept}, high quality, vibrant colors, detailed background, masterpiece.`;
       
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
-        contents: {
-          parts: [{ text: prompt }],
-        },
-        config: {
-          imageConfig: {
-            aspectRatio: "1:1"
-          }
+     // [수정] 모델을 먼저 가져온 후 콘텐츠를 생성하는 방식으로 변경
+      const model = ai.getGenerativeModel({ 
+        model: "gemini-1.5-flash" 
+      });
+
+      const response = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          // 이미지 생성 모델이 아닌 텍스트 모델(flash)을 쓸 경우 
+          // imageConfig 대신 일반 설정을 사용합니다.
+          maxOutputTokens: 1000,
         }
       });
 
