@@ -24,7 +24,7 @@ export function useMuseAI(address: string | null) {
         contents: prompt,
       });
 
-      return response.text;
+      return response.text();
     } catch (error) {
       console.error('Coach AI Error:', error);
       return "오늘도 힘내세요! 당신의 Muse가 기다리고 있어요♡";
@@ -101,7 +101,7 @@ export function useMuseAI(address: string | null) {
         }
       });
 
-      const story = JSON.parse(response.text);
+      const story = JSON.parse(response.text());
       
       await fetch('/api/muse/ai/save-story', {
         method: 'POST',
