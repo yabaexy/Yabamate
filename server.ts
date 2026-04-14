@@ -171,9 +171,31 @@ async function initDb() {
 // AI 호출용 공통 함수 (Vercel AI Gateway를 거침)
 async function callAIGateway(prompt: any, isImage = false) {
   const model = isImage ? 'gemini-2.5-flash-image' : 'gemini-3-flash-preview';
+
+  if (isImage && !prompt.config) {
+    prompt.config = { imageConfig: { aspectRatio: "1:1" } };
+  }
+
+  const response = await fetch(baseUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(prompt)
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`AI Gateway Error: ${response.status} - ${errorBody}`);
+  }
+
+  return response.json();
+}
   
   // Gateway URL이 있으면 거기로, 없으면 직통으로 (보안을 위해 서버에서만 호출)
   const url = AI_GATEWAY_URL 
+    ? `${AI_GATEWAY_URL}/v1beta/models/${model}:generateContent`
+    : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+
+    const baseUrl = AI_GATEWAY_URL 
     ? `${AI_GATEWAY_URL}/v1beta/models/${model}:generateContent`
     : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
