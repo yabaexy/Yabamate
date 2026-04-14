@@ -55,6 +55,7 @@ async function initDb() {
         price REAL,
         period TEXT,
         description TEXT,
+        image_url TEXT, 
         auto_renew_enabled INTEGER DEFAULT 0
       );
     `;
@@ -185,6 +186,7 @@ async function callAIGateway(prompt: any, isImage = false) {
 
 async function startServer() {
   await initDb();
+  
 
   const app = express();
   const PORT = 3000;
@@ -360,26 +362,40 @@ async function startServer() {
     }
   });
 
-  app.post('/api/tiers', async (req, res) => {
+  app.post('/api/tiers', upload.single('tierImage'), async (req, res) => {
     const { id, creator_address, name, price, period, description, auto_renew_enabled } = req.body;
+    let image_url = '';
+
     try {
+      // 1. 이미지가 첨부되었다면 Vercel Blob에 업로드
+      if (req.file) {
+        const blob = await put(`tiers/${creator_address}-${Date.now()}${path.extname(req.file.originalname)}`, req.file.buffer, {
+          access: 'public',
+          token: process.env.BLOB_READ_WRITE_TOKEN
+        });
+        image_url = blob.url;
+      }
+
+      // 2. Neon DB에 데이터 저장 (Upsert 로직)
       await sql`
-        INSERT INTO tiers (id, creator_address, name, price, period, description, auto_renew_enabled) 
-        VALUES (${id}, ${creator_address}, ${name}, ${price}, ${period}, ${description}, ${auto_renew_enabled ? 1 : 0})
+        INSERT INTO tiers (id, creator_address, name, price, period, description, image_url, auto_renew_enabled) 
+        VALUES (${id}, ${creator_address}, ${name}, ${price}, ${period}, ${description}, ${image_url}, ${auto_renew_enabled ? 1 : 0})
         ON CONFLICT (id) DO UPDATE SET 
           creator_address = EXCLUDED.creator_address,
           name = EXCLUDED.name,
           price = EXCLUDED.price,
           period = EXCLUDED.period,
           description = EXCLUDED.description,
-          auto_renew_enabled = EXCLUDED.auto_renew_enabled
+          auto_renew_enabled = EXCLUDED.auto_renew_enabled,
+          image_url = CASE WHEN EXCLUDED.image_url <> '' THEN EXCLUDED.image_url ELSE tiers.image_url END
       `;
-      res.json({ success: true });
+
+      res.json({ success: true, image_url });
     } catch (error) {
+      console.error('Tier save error:', error);
       res.status(500).json({ error: 'Failed to save tier' });
     }
   });
-
   // Rankings
   app.post('/api/rankings', async (req, res) => {
     const { gameId, address, score } = req.body;
