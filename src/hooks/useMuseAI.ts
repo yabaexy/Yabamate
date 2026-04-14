@@ -1,20 +1,15 @@
 import { useState, useCallback } from 'react';
+import { GoogleGenAI, Type } from "@google/genai";
 
-
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export function useMuseAI(address: string | null) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const getCoachAdvice = useCallback(async (museData: any, missions: any[]) => {
-  if (!address) return null;
-  try {
-    // 서버 API 호출로 교체
-    const response = await fetch('/api/muse/ai/coach', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ museData, missions }),
-    });
-       const prompt = `
+    if (!address) return null;
+    try {
+      const prompt = `
         You are an AI Idol Coach for a Muse character named "${museData.name}".
         Current Stats: Level ${museData.level}, Charm ${museData.charm}, Talent ${museData.talent}, Fanbase ${museData.fanbase}.
         Today's Mission Progress: ${JSON.stringify(missions)}.
@@ -24,33 +19,61 @@ export function useMuseAI(address: string | null) {
         Use emojis and a friendly "waifu/idol" tone.
       `;
 
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+      });
 
-    const data = await response.json();
-    return data.text; // 서버가 { text: "..." } 반환
-  } catch (error) {
-    console.error('Coach AI Error:', error);
-    return "OK, your Muse is awaiting even today♡";
-  }
-}, [address]);
-const generateMuseImage = useCallback(async (concept: string) => {
-  if (!address) return null;
-  setIsGenerating(true);
-  try {
-    const response = await fetch('/api/muse/ai/generate-image', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address, concept }),
-    });
+      return response.text;
+    } catch (error) {
+      console.error('Coach AI Error:', error);
+      return "오늘도 힘내세요! 당신의 Muse가 기다리고 있어요♡";
+    }
+  }, [address]);
 
-    const data = await response.json();
-    return data.url; // 서버가 이미지를 생성 후 Blob에 저장하고 URL 반환
-  } catch (error) {
-    console.error('Image AI Error:', error);
-    return null;
-  } finally {
-    setIsGenerating(false);
-  }
-}, [address]);
+  const generateMuseImage = useCallback(async (concept: string) => {
+    if (!address) return null;
+    setIsGenerating(true);
+    try {
+      const prompt = `A cute anime-style girl idol character, ${concept}, high quality, vibrant colors, detailed background, masterpiece.`;
+      
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: {
+          parts: [{ text: prompt }],
+        },
+        config: {
+          imageConfig: {
+            aspectRatio: "1:1"
+          }
+        }
+      });
+
+      let base64Data = "";
+      for (const part of response.candidates?.[0]?.content?.parts || []) {
+        if (part.inlineData) {
+          base64Data = part.inlineData.data;
+          break;
+        }
+      }
+
+      if (base64Data) {
+        const saveRes = await fetch('/api/muse/ai/save-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address, prompt: concept, base64Data }),
+        });
+        const saveData = await saveRes.json();
+        return saveData.url;
+      }
+      return null;
+    } catch (error) {
+      console.error('Image AI Error:', error);
+      return null;
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [address]);
 
   const getStory = useCallback(async (level: number, name: string) => {
     if (!address) return null;
@@ -78,7 +101,7 @@ const generateMuseImage = useCallback(async (concept: string) => {
         }
       });
 
-      const story = JSON.parse(response.text());
+      const story = JSON.parse(response.text);
       
       await fetch('/api/muse/ai/save-story', {
         method: 'POST',

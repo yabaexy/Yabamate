@@ -12,7 +12,6 @@ import { useYMP, YMP_TO_WYDA_RATE } from './hooks/useYMP';
 import { parseUnits } from 'ethers';
 import { motion, AnimatePresence } from 'motion/react';
 import { Shield, Zap, Heart, Globe, ArrowRight, LayoutDashboard, Compass, Gamepad2, Gift, Sparkles } from 'lucide-react';
-import { useMuse } from './hooks/useMuse';
 
 export default function App() {
   const [account, setAccount] = useState<string | null>(null);
@@ -20,7 +19,7 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [view, setView] = useState<'explore' | 'dashboard' | 'arcade' | 'muse'>('explore');
   const [showRewardToast, setShowRewardToast] = useState<{ points: number; message: string } | null>(null);
-  const { muse, loading, missions } = useMuse(account); // account?.address 대신 account 객체 전달 여부 확인
+
   const { points, checkAttendance, markGamePlayed, spendPoints } = useYMP(account);
 
   useEffect(() => {
@@ -150,21 +149,6 @@ export default function App() {
       alert(`Subscription failed: ${error.message || 'Unknown error'}`);
     }
   };
-  if (loading) return <div className="flex h-screen items-center justify-center">Muse 데이터를 불러오는 중...</div>;
-
-  // Muse 화면(view === 'muse')일 때 데이터가 없다면 생성 화면 유도
-  const renderMuseContent = () => {
-    if (!muse && account) {
-      return (
-        <div className="p-20 text-center">
-          <h2 className="text-2xl font-bold">아직 Muse가 없습니다!</h2>
-          <p className="mt-4 text-zinc-500">첫 번째 아이돌 Muse를 생성하고 대시보드를 확인하세요.</p>
-          <button className="mt-6 rounded-full bg-emerald-600 px-8 py-3 font-bold text-white">Muse 생성하기</button>
-        </div>
-      );
-    }
-    return <MuseDashboard account={account!} />;
-  };
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans text-zinc-900 selection:bg-emerald-100 selection:text-emerald-900">
@@ -172,7 +156,6 @@ export default function App() {
 
       {/* View Switcher (Only if connected) */}
       {account && (
-        
         <div className="sticky top-16 z-40 flex justify-center border-b border-zinc-100 bg-white/80 py-2 backdrop-blur-md">
           <div className="flex gap-1 rounded-full bg-zinc-100 p-1">
             <button

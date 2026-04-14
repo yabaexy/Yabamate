@@ -69,8 +69,12 @@ export const MuseDashboard: React.FC<MuseDashboardProps> = ({ account }) => {
   };
 
   const getCharacterImage = () => {
+    // Default character design provided by user
+    // Note: Replace this URL with the actual permanent URL of the uploaded image
+    const DEFAULT_MUSE_IMAGE = "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&q=80&w=1000"; 
+    
     const seed = muse.name || 'default';
-    if (muse.level < 30) return `https://api.dicebear.com/7.x/adventurer/svg?seed=${seed}&scale=120&translateY=10`;
+    if (muse.level < 30) return DEFAULT_MUSE_IMAGE;
     if (muse.level < 50) return `https://api.dicebear.com/7.x/adventurer/svg?seed=${seed}&scale=100`;
     return `https://api.dicebear.com/7.x/adventurer/svg?seed=${seed}&scale=90&translateY=-5`;
   };
