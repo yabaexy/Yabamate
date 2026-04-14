@@ -172,6 +172,11 @@ export default function App() {
 
       {/* View Switcher (Only if connected) */}
       {account && (
+        <MuseDashboard 
+       account={account} 
+       museData={muse}     // Neon DB에서 가져온 캐릭터 스탯
+       missions={missions} // Neon DB에서 가져온 미션 목록
+     />
         <div className="sticky top-16 z-40 flex justify-center border-b border-zinc-100 bg-white/80 py-2 backdrop-blur-md">
           <div className="flex gap-1 rounded-full bg-zinc-100 p-1">
             <button
