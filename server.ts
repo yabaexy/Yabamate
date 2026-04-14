@@ -11,6 +11,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
+const AI_GATEWAY_URL = process.env.AI_GATEWAY_URL;
 const __dirname = path.dirname(__filename);
 
 const dbUrl = process.env.DATABASE_URL;
