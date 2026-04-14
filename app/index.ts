@@ -7,12 +7,18 @@ import { put } from '@vercel/blob';
 import multer from 'multer';
 import fs from 'fs';
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const AI_GATEWAY_URL = process.env.AI_GATEWAY_URL;
 const __dirname = path.dirname(__filename);
+const app = express();
+
+app.use(cors()); // 다른 도메인 요청 허용
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const dbUrl = process.env.DATABASE_URL;
 const isValidDbUrl = dbUrl && dbUrl.startsWith('postgres');
