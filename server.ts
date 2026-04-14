@@ -433,6 +433,59 @@ async function startServer() {
     }
   });
 
+  app.post('/api/muse/ai/coach', async (req, res) => {
+  const { museData, missions } = req.body;
+  const prompt = {
+    contents: [{
+      parts: [{
+        text: `You are an AI Idol Coach for a Muse named "${museData.name}". 
+               Stats: Level ${museData.level}, Charm ${museData.charm}. 
+               Mission: ${JSON.stringify(missions)}. 
+               Provide 2 short anime-style sentences with emojis.`
+      }]
+    }]
+  };
+
+  try {
+    const data = await callAIGateway(prompt);
+    // Gemini 3 Flash 응답 구조에 맞춰 텍스트 추출
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "오늘도 파이팅이에요! ♡";
+    res.json({ text });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'AI Advice failed' });
+  }
+});
+
+app.post('/api/muse/ai/generate-image', async (req, res) => {
+  const { address, concept } = req.body;
+  const prompt = {
+    contents: [{ parts: [{ text: `A cute anime-style girl idol character, ${concept}, high quality, vibrant colors.` }] }]
+  };
+
+  try {
+    const aiRes = await callAIGateway(prompt, true); // 이미지 모델 호출
+    const base64Data = aiRes.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+
+    if (!base64Data) throw new Error("No image data from AI");
+
+    // Vercel Blob 저장
+    const buffer = Buffer.from(base64Data, 'base64');
+    const blob = await put(`muse-ai/${address}-${Date.now()}.png`, buffer, {
+      access: 'public',
+      token: process.env.BLOB_READ_WRITE_TOKEN
+    });
+
+    // DB 저장
+    await sql`INSERT INTO muse_generated_images (user_address, prompt, image_url) VALUES (${address}, ${concept}, ${blob.url})`;
+
+    res.json({ url: blob.url });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Image Generation failed' });
+  }
+});
+
   app.get('/api/rankings/:gameId', async (req, res) => {
     try {
       const rankings = await sql`
