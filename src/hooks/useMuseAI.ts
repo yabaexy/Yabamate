@@ -32,50 +32,25 @@ export function useMuseAI(address: string | null) {
     return "OK, your Muse is awaiting even today♡";
   }
 }, [address]);
+const generateMuseImage = useCallback(async (concept: string) => {
+  if (!address) return null;
+  setIsGenerating(true);
+  try {
+    const response = await fetch('/api/muse/ai/generate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address, concept }),
+    });
 
-  const generateMuseImage = useCallback(async (concept: string) => {
-    if (!address) return null;
-    setIsGenerating(true);
-    try {
-      const prompt = `A cute anime-style girl idol character, ${concept}, high quality, vibrant colors, detailed background, masterpiece.`;
-      
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
-        contents: {
-          parts: [{ text: prompt }],
-        },
-        config: {
-          imageConfig: {
-            aspectRatio: "1:1"
-          }
-        }
-      });
-
-      let base64Data = "";
-      for (const part of response.candidates?.[0]?.content?.parts || []) {
-        if (part.inlineData) {
-          base64Data = part.inlineData.data;
-          break;
-        }
-      }
-
-      if (base64Data) {
-        const saveRes = await fetch('/api/muse/ai/save-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ address, prompt: concept, base64Data }),
-        });
-        const saveData = await saveRes.json();
-        return saveData.url;
-      }
-      return null;
-    } catch (error) {
-      console.error('Image AI Error:', error);
-      return null;
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [address]);
+    const data = await response.json();
+    return data.url; // 서버가 이미지를 생성 후 Blob에 저장하고 URL 반환
+  } catch (error) {
+    console.error('Image AI Error:', error);
+    return null;
+  } finally {
+    setIsGenerating(false);
+  }
+}, [address]);
 
   const getStory = useCallback(async (level: number, name: string) => {
     if (!address) return null;
