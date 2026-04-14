@@ -8,7 +8,7 @@ const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
 
 
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+const ai = apiKey ? import.meta.env.VITE_GEMINI_API_KEY;import.meta.env.VITE_GEMINI_API_KEY;
 
 
 
@@ -52,7 +52,7 @@ const getCoachAdvice = useCallback(async (museData: any, missions: any[]) => {
 
       const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      const result = await model.generateContent(prompt);
+      const result = await model.generateContent(prompt); 
 
       const response = await result.response;
 

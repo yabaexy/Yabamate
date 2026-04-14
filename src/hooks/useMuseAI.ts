@@ -8,7 +8,7 @@ const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
 
 
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+const ai = apiKey ? import.meta.env.VITE_GEMINI_API_KEY;import.meta.env.VITE_GEMINI_API_KEY;
 
 
 
@@ -188,39 +188,25 @@ const getCoachAdvice = useCallback(async (museData: any, missions: any[]) => {
 
 
 
-      const response = await ai.models.generateContent({
+     const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" }); // 모델 선언 필수
 
-        model: "gemini-1.5-flash",
+const result = await model.generateContent({
+  contents: [{ role: 'user', parts: [{ text: prompt }] }],
+  generationConfig: { // config가 아니라 generationConfig입니다.
+    responseMimeType: "application/json",
+    responseSchema: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING },
+        content: { type: Type.STRING }
+      },
+      required: ["title", "content"]
+    }
+  }
+});
 
-        contents: prompt,
-
-        config: {
-
-          responseMimeType: "application/json",
-
-          responseSchema: {
-
-            type: Type.OBJECT,
-
-            properties: {
-
-              title: { type: Type.STRING },
-
-              content: { type: Type.STRING }
-
-            },
-
-            required: ["title", "content"]
-
-          }
-
-        }
-
-      });
-
-
-
-      const story = JSON.parse(response.text);
+const response = await result.response;
+const story = JSON.parse(response.text()); // .text() 함수 호출 필수
 
      
 
@@ -270,39 +256,25 @@ const getCoachAdvice = useCallback(async (museData: any, missions: any[]) => {
 
 
 
-      const response = await ai.models.generateContent({
+  const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        model: "gemini-1.5-flash",
+const result = await model.generateContent({
+  contents: [{ role: 'user', parts: [{ text: prompt }] }],
+  generationConfig: {
+    responseMimeType: "application/json",
+    responseSchema: {
+      type: Type.OBJECT,
+      properties: {
+        challenge: { type: Type.STRING },
+        reward: { type: Type.STRING }
+      },
+      required: ["challenge", "reward"]
+    }
+  }
+});
 
-        contents: prompt,
-
-        config: {
-
-          responseMimeType: "application/json",
-
-          responseSchema: {
-
-            type: Type.OBJECT,
-
-            properties: {
-
-              challenge: { type: Type.STRING },
-
-              reward: { type: Type.STRING }
-
-            },
-
-            required: ["challenge", "reward"]
-
-          }
-
-        }
-
-      });
-
-
-
-      return JSON.parse(response.text);
+const response = await result.response;
+return JSON.parse(response.text()); // .text() 함수 호출 필수
 
     } catch (error) {
 
