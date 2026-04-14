@@ -1,14 +1,20 @@
 import { useState, useCallback } from 'react';
-import { GoogleGenAI, Type } from "@google/genai";
+
 
 
 export function useMuseAI(address: string | null) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const getCoachAdvice = useCallback(async (museData: any, missions: any[]) => {
-    if (!address) return null;
-    try {
-      const prompt = `
+  if (!address) return null;
+  try {
+    // 서버 API 호출로 교체
+    const response = await fetch('/api/muse/ai/coach', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ museData, missions }),
+    });
+       const prompt = `
         You are an AI Idol Coach for a Muse character named "${museData.name}".
         Current Stats: Level ${museData.level}, Charm ${museData.charm}, Talent ${museData.talent}, Fanbase ${museData.fanbase}.
         Today's Mission Progress: ${JSON.stringify(missions)}.
@@ -18,17 +24,14 @@ export function useMuseAI(address: string | null) {
         Use emojis and a friendly "waifu/idol" tone.
       `;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
-      });
 
-      return response.text();
-    } catch (error) {
-      console.error('Coach AI Error:', error);
-      return "오늘도 힘내세요! 당신의 Muse가 기다리고 있어요♡";
-    }
-  }, [address]);
+    const data = await response.json();
+    return data.text; // 서버가 { text: "..." } 반환
+  } catch (error) {
+    console.error('Coach AI Error:', error);
+    return "OK, your Muse is awaiting even today♡";
+  }
+}, [address]);
 
   const generateMuseImage = useCallback(async (concept: string) => {
     if (!address) return null;
