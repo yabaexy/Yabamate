@@ -52,7 +52,7 @@ const getCoachAdvice = useCallback(async (museData: any, missions: any[]) => {
 
       const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      const result = await model.generateContent(prompt);
+      const result = await model.generateContent(prompt); 
 
       const response = await result.response;
 
