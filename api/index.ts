@@ -1,5 +1,4 @@
 import express from 'express';
-npm install cors
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
