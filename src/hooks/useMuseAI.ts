@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export function useMuseAI(address: string | null) {
   const [isGenerating, setIsGenerating] = useState(false);
