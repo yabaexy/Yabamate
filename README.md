@@ -1,9 +1,9 @@
-# Yabamate + Neon + Vercel bundle
+# Yabamate Vercel Fix Set
 
-This bundle contains:
-- `server.ts.patch` — minimal patch for the existing Express server
-- `api/[...path].ts` — Vercel catch-all API entrypoint
-- `vercel.json` — build/output config for Vercel
-- `.env.example` — environment variable template
+Includes:
+- `src/hooks/useMuseAI.ts` safe browser fallback
+- `api/[...path].ts` Neon/Postgres API handler for Vercel
 
-Apply the patch to the repository root, then add the new files.
+Set this in Vercel:
+- `DATABASE_URL` for Neon
+- `VITE_GEMINI_API_KEY` only if you want AI features enabled in the browser build
