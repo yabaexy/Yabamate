@@ -21,7 +21,7 @@ export default function App() {
   const [showRewardToast, setShowRewardToast] = useState<{ points: number; message: string } | null>(null);
 
   const { points, checkAttendance, markGamePlayed, spendPoints } = useYMP(account);
-
+ 
   useEffect(() => {
     if (account) {
       checkAttendance().then(pointsEarned => {
